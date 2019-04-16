@@ -23,7 +23,7 @@ async def test_connectivity_job_with_http_port(
     ingress_secret_url = http_job["ingress_url"].with_path("/secret.txt")
 
     # external ingress test
-    probe = await helper.check_http_get(ingress_secret_url)
+    probe = await helper.http_get(ingress_secret_url)
     assert probe
     assert probe.strip() == http_job["secret"]
 
@@ -32,7 +32,7 @@ async def test_connectivity_job_with_http_port(
     job = await helper.run_job(
         "alpine:latest",
         command,
-        desciption="secret ingress fetcher ",
+        description="secret ingress fetcher ",
         wait_state=JobStatus.SUCCEEDED,
     )
     await helper.check_job_output(job.id, re.escape(http_job["secret"]))
@@ -67,7 +67,7 @@ def xtest_connectivity_job_without_http_port(secret_job, helper):
     # external ingress test
     # it will take ~1 min, because we need to wait while nginx started
     with pytest.raises(aiohttp.ClientResponseError):
-        helper.check_http_get(ingress_secret_url)
+        helper.http_get(ingress_secret_url)
 
     # internal ingress test
     command = f"wget -q -T 15 {ingress_secret_url} -O -"

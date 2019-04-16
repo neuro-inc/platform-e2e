@@ -1,4 +1,5 @@
 import asyncio
+import re
 import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Optional
@@ -22,6 +23,8 @@ from yarl import URL
 
 NETWORK_TIMEOUT = 60.0 * 3
 CLIENT_TIMEOUT = aiohttp.ClientTimeout(None, None, NETWORK_TIMEOUT, NETWORK_TIMEOUT)
+JOB_OUTPUT_TIMEOUT = 60 * 5
+JOB_OUTPUT_SLEEP_SECONDS = 2
 
 
 class Helper:
@@ -41,26 +44,29 @@ class Helper:
         command: str,
         *,
         description: Optional[str] = None,
-        wait_for_start: bool = True,
+        wait_state: JobStatus = JobStatus.RUNNING,
+        network: Optional[NetworkPortForwarding] = None,
     ) -> JobDescription:
         job = await self.client.jobs.submit(
             image=Image(image, command=command),
             resources=Resources.create(0.1, None, None, "20", True),
-            network=NetworkPortForwarding.from_cli(22),
+            network=network,
             is_preemptible=False,
             volumes=None,
             description=description,
         )
         for i in range(60):
-            status = await self.client.jobs.status(job.id)
-            if status.status == JobStatus.RUNNING:
+            if job.status == wait_state:
                 break
+            if job.status == JobStatus.FAILED:
+                raise AssertionError("Cannot start job")
             await asyncio.sleep(1)
+            job = await self.client.jobs.status(job.id)
         else:
-            raise AssertionError("Cannot start NGINX job")
+            raise AssertionError("Cannot start job")
         return job
 
-    async def check_http_get(self, url: URL) -> str:
+    async def http_get(self, url: URL) -> str:
         """
             Try to fetch given url few times.
         """
@@ -77,6 +83,30 @@ class Helper:
                     history=tuple(),
                     request_info=resp.request_info,
                 )
+
+    async def check_job_output(self, job_id: str, expected: str, *, re_flags: int=0):
+        """
+            Wait until job output satisfies given regexp
+        """
+        loop = asyncio.get_event_loop()
+
+        started_at = loop.time()
+        chunks = []
+        while loop.time() - started_at < JOB_OUTPUT_TIMEOUT:
+            async for chunk in self.client.jobs.monitor(job_id):
+                if not chunk:
+                    break
+                chunks.append(chunk.decode())
+                if re.search(expected, "".join(chunks), re_flags):
+                    return
+                if time() - started_at < JOB_OUTPUT_TIMEOUT:
+                    break
+                await asyncio.sleep(JOB_OUTPUT_SLEEP_SECONDS)
+
+        raise AssertionError(
+            f"Output of job {job_id} does not satisfy to expected regexp: {expected}"
+        )
+
 
 
 async def ensure_config(env_name: str, tmp_path_factory: Any) -> Optional[Path]:
