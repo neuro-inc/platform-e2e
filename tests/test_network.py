@@ -1,6 +1,7 @@
 import re
 from typing import Any
 
+import aiohttp
 import pytest
 from neuromation.api import JobStatus
 
@@ -63,13 +64,13 @@ async def test_connectivity_job_without_http_port(
 
     # internal ingress test
     command = f"wget -q -T 15 {ingress_secret_url} -O -"
-    job_id = helper.run_job(
+    job = await helper.run_job(
         "alpine:latest",
         command,
         description="secret ingress fetcher ",
         wait_state=JobStatus.FAILED,
     )
-    await helper.check_job_output(job_id, r"wget.+404.+Not Found")
+    await helper.check_job_output(job.id, r"wget.+404.+Not Found")
 
     # internal network test
     # cannot be implemented now
@@ -78,8 +79,7 @@ async def test_connectivity_job_without_http_port(
     # internal network test
 
 
-@pytest.mark.e2e
-async def xtest_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
+async def test_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
     http_job = await secret_job(True)
 
     ingress_secret_url = f"{http_job['ingress_url']}/secret.txt"
@@ -87,24 +87,24 @@ async def xtest_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
 
     # internal ingress test
     command = f"wget -q -T 15 {ingress_secret_url} -O -"
-    job_id = helper_alt.run_job(
+    job = await helper_alt.run_job(
         "alpine:latest",
         command,
         description="secret ingress fetcher ",
         wait_state=JobStatus.SUCCEEDED,
     )
-    await helper_alt.check_job_output(job_id, re.escape(http_job["secret"]))
+    await helper_alt.check_job_output(job.id, re.escape(http_job["secret"]))
 
     # internal network test
 
     internal_secret_url = f"http://{http_job['internal_hostname']}/secret.txt"
     command = f"wget -q -T 15 {internal_secret_url} -O -"
     # This job must be failed,
-    job_id = await helper_alt.run_job(
+    job = await helper_alt.run_job(
         "alpine:latest",
         command,
         description="secret internal network fetcher ",
         wait_state=JobStatus.FAILED,
     )
 
-    await helper_alt.check_job_output(job_id, r"timed out")
+    await helper_alt.check_job_output(job.id, r"timed out")

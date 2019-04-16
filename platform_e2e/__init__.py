@@ -58,8 +58,9 @@ class Helper:
         for i in range(60):
             if job.status == wait_state:
                 break
-            if ((wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or
-                (wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED)):
+            if (wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or (
+                wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED
+            ):
                 raise AssertionError(f"Wait for {wait_state} is failed: {job.status}")
             await asyncio.sleep(1)
             job = await self.client.jobs.status(job.id)
