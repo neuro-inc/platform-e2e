@@ -1,6 +1,6 @@
 import asyncio
-import re
 import os
+import re
 from pathlib import Path
 from typing import Any, AsyncIterator, Optional
 
@@ -84,7 +84,9 @@ class Helper:
                     request_info=resp.request_info,
                 )
 
-    async def check_job_output(self, job_id: str, expected: str, *, re_flags: int=0):
+    async def check_job_output(
+        self, job_id: str, expected: str, *, re_flags: int = 0
+    ) -> None:
         """
             Wait until job output satisfies given regexp
         """
@@ -99,14 +101,13 @@ class Helper:
                 chunks.append(chunk.decode())
                 if re.search(expected, "".join(chunks), re_flags):
                     return
-                if time() - started_at < JOB_OUTPUT_TIMEOUT:
+                if loop.time() - started_at < JOB_OUTPUT_TIMEOUT:
                     break
                 await asyncio.sleep(JOB_OUTPUT_SLEEP_SECONDS)
 
         raise AssertionError(
             f"Output of job {job_id} does not satisfy to expected regexp: {expected}"
         )
-
 
 
 async def ensure_config(env_name: str, tmp_path_factory: Any) -> Optional[Path]:

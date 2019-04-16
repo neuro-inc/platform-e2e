@@ -28,7 +28,7 @@ def secret_job(helper: Helper, loop: asyncio.AbstractEventLoop) -> Any:
                 if http_auth:
                     description += " with authentication"
         status: JobDescription = await helper.run_job(
-            "nginx:latest", command, description=description, network=network,
+            "nginx:latest", command, description=description, network=network
         )
         return {
             "id": status.id,
