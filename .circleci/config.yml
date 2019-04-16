@@ -5,7 +5,7 @@ jobs:
       - image: circleci/python:3.7.2
     working_directory: ~/repo
     steps:
-      - setup
+      - setup:
           name: setup
           command: |
             python3 -m venv .env
