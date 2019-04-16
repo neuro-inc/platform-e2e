@@ -58,12 +58,13 @@ class Helper:
         for i in range(60):
             if job.status == wait_state:
                 break
-            if job.status == JobStatus.FAILED:
-                raise AssertionError("Cannot start job")
+            if ((wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or
+                (wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED)):
+                raise AssertionError(f"Wait for {wait_state} is failed: {job.status}")
             await asyncio.sleep(1)
             job = await self.client.jobs.status(job.id)
         else:
-            raise AssertionError("Cannot start job")
+            raise AssertionError("Cannot start job to {wait_state}: {job.status}")
         return job
 
     async def http_get(self, url: URL) -> str:
@@ -149,5 +150,12 @@ def config_path_alt(tmp_path_factory: Any) -> Path:
 @pytest.fixture()
 async def helper(config_path: Path) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
+    yield Helper(client)
+    await client.close()
+
+
+@pytest.fixture()
+async def helper_alt(config_path_alt: Path) -> AsyncIterator[Helper]:
+    client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
     yield Helper(client)
     await client.close()
