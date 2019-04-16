@@ -1,0 +1,26 @@
+version: 2
+jobs:  
+  build:
+    docker:
+      - image: circleci/python:3.7.2
+    working_directory: ~/repo
+    steps:
+      - setup
+          name: setup
+          command: |
+            python3 -m venv .env
+            . .env/bin/activate
+            make setup
+
+      - lint:
+          name: lint
+          command: |
+            . .env/bin/activate
+            make lint
+
+      - test:
+          name: test
+          command: |
+            . .env/bin/activate
+            make test
+
