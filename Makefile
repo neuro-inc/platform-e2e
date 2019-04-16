@@ -1,3 +1,5 @@
+SOURCES = setup.py platform_e2e tests
+
 setup:
 	pip install -r requirements.txt
 
@@ -7,11 +9,11 @@ test:
 
 
 format:
-	black .
-	isort -rc .
+	black $(SOURCES)
+	isort -rc $(SOURCES)
 
 lint:
 	flake8
-	black --check .
-	isort --check -rc .
-	mypy .
+	black --check $(SOURCES)
+	isort --check -rc $(SOURCES)
+	mypy $(SOURCES)
