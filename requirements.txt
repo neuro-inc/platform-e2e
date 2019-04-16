@@ -1,0 +1,9 @@
+pytest
+mypy
+black
+isort
+flake8
+pytest-aiohttp
+aiohttp
+-e git+git@github.com:neuromation/platform-client-python.git#egg=neuromation
+-e .
