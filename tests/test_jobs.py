@@ -94,8 +94,8 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
         )
         jobs.add(job.id)
 
-    for job in jobs:
-        await helper.wait_job_state(job, JobStatus.RUNNING)
+    for job_id in jobs:
+        await helper.wait_job_state(job_id, JobStatus.RUNNING)
 
     # test no status filters (same as pending+running)
     ret = await helper.client.jobs.list()
@@ -136,8 +136,10 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
         )
         jobs_name_map[name] = job.id
 
-    for job in jobs_name_map.values():
-        await helper.wait_job_state(job, JobStatus.RUNNING)
+    assert name_0 is not None
+
+    for job_id in jobs_name_map.values():
+        await helper.wait_job_state(job_id, JobStatus.RUNNING)
 
     # test filtering by name only
     ret = await helper.client.jobs.list(name=name_0)
