@@ -46,10 +46,13 @@ class Helper:
         description: Optional[str] = None,
         wait_state: JobStatus = JobStatus.RUNNING,
         network: Optional[NetworkPortForwarding] = None,
+        resources: Optional[Resources] = None,
     ) -> JobDescription:
+        if resources is None:
+            resources = Resources.create(0.1, None, None, "20", True)
         job = await self.client.jobs.submit(
             image=Image(image, command=command),
-            resources=Resources.create(0.1, None, None, "20", True),
+            resources=resources,
             network=network,
             is_preemptible=False,
             volumes=None,
@@ -149,14 +152,18 @@ def config_path_alt(tmp_path_factory: Any) -> Path:
 
 
 @pytest.fixture()
-async def helper(config_path: Path) -> AsyncIterator[Helper]:
+async def helper(
+    config_path: Path, loop: asyncio.AbstractEventLoop
+) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
     yield Helper(client)
     await client.close()
 
 
 @pytest.fixture()
-async def helper_alt(config_path_alt: Path) -> AsyncIterator[Helper]:
+async def helper_alt(
+    config_path_alt: Path, loop: asyncio.AbstractEventLoop
+) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
     yield Helper(client)
     await client.close()

@@ -21,6 +21,8 @@ def secret_job(helper: Helper, loop: asyncio.AbstractEventLoop) -> Any:
         )
         if http_port:
             network = NetworkPortForwarding.from_cli(80, http_auth)
+        else:
+            network = None
         if not description:
             description = "nginx with secret file"
             if http_port:

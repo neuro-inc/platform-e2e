@@ -5,7 +5,7 @@ setup:
 
 
 test:
-	pytest tests
+	pytest --durations 10 --timeout 300 --verbose tests
 
 
 format:
