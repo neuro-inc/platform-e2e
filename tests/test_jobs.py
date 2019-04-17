@@ -75,3 +75,38 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     job_ids = [j.id for j in jobs]
     assert first_job.id not in job_ids
     assert second_job.id not in job_ids
+
+
+async def test_e2e_job_list_filtered_by_status(helper: Helper) -> None:
+    N_JOBS = 5
+
+    # submit N jobs
+    jobs = set()
+    for _ in range(N_JOBS):
+        command = "sleep 10m"
+        job = await helper.run_job("ubuntu:latest", command)
+        jobs.add(job.id)
+
+    # test no status filters (same as pending+running)
+    ret = await helper.client.jobs.list()
+    jobs_ls_no_arg = set(j.id for j in ret)
+    # check '>=' (not '==') multiple builds run in parallel can interfere
+    assert jobs_ls_no_arg >= jobs
+
+    # test single status filter
+    ret = await helper.client.jobs.list({"running"})
+    jobs_ls_running = set(j.id for j in ret)
+    # check '>=' (not '==') multiple builds run in parallel can interfere
+    assert jobs_ls_running >= jobs
+
+    # test multiple status filters
+    ret = await helper.client.jobs.list({"running", "failed"})
+    jobs_ls_running = set(j.id for j in ret)
+    # check '>=' (not '==') multiple builds run in parallel can interfere
+    assert jobs_ls_running >= jobs
+
+    # status "all" is the same as pending+running+failed+succeeded
+    ret = await helper.client.jobs.list({"pending", "running", "failed", "succeeded"})
+    jobs_ls_all_explicit = set(j.id for j in ret)
+    # check '>=' (not '==') multiple builds run in parallel can interfere
+    assert jobs_ls_all_explicit >= jobs
