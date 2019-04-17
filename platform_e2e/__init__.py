@@ -58,6 +58,11 @@ class Helper:
             volumes=None,
             description=description,
         )
+        return await self._wait_job_state(job, wait_state)
+
+    async def _wait_job_state(
+        self, job: JobDescription, wait_state: JobStatus
+    ) -> JobDescription:
         for i in range(60):
             if job.status == wait_state:
                 break
@@ -65,11 +70,23 @@ class Helper:
                 wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED
             ):
                 raise AssertionError(f"Wait for {wait_state} is failed: {job.status}")
+            if wait_state == JobStatus.PENDING and job.status in (
+                JobStatus.RUNNING,
+                JobStatus.SUCCEEDED,
+                JobStatus.FAILED,
+            ):
+                break
             await asyncio.sleep(1)
             job = await self.client.jobs.status(job.id)
         else:
             raise AssertionError("Cannot start job to {wait_state}: {job.status}")
         return job
+
+    async def wait_job_state(
+        self, job_id: str, wait_state: JobStatus
+    ) -> JobDescription:
+        job = await self.client.jobs.status(job_id)
+        return await self._wait_job_state(job, wait_state)
 
     async def http_get(self, url: URL) -> str:
         """

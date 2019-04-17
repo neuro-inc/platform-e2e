@@ -1,4 +1,5 @@
 import asyncio
+
 from neuromation.api import JobStatus, Resources
 
 
@@ -43,3 +44,32 @@ async def test_unschedulable_job_lifecycle(helper):
     jobs = await helper.client.jobs.list({"running", "pending"})
     job_ids = [j.id for j in jobs]
     assert job.id not in job_ids
+
+
+async def test_two_jobs_at_once(helper):
+    # Run a new job
+    command = 'bash -c "sleep 10m; false"'
+    first_job = await helper.run_job("ubuntu:latest", command)
+    second_job = await helper.run_job("ubuntu:latest", command)
+
+    # Check it is in a running,pending job list now
+    jobs = await helper.client.jobs.list({"running", "pending"})
+    job_ids = [j.id for j in jobs]
+    assert first_job.id in job_ids
+    assert second_job.id in job_ids
+
+    # Kill the job
+    await helper.client.jobs.kill(first_job.id)
+    await helper.client.jobs.kill(second_job.id)
+
+    # Currently we check that the job is not running anymore
+    # TODO(adavydow): replace to succeeded check when racecon in
+    # platform-api fixed.
+    await helper.wait_job_state(first_job.id, JobStatus.SUCCEEDED)
+    await helper.wait_job_state(second_job.id, JobStatus.SUCCEEDED)
+
+    # Check that it is not in a running job list anymore
+    jobs = await helper.client.jobs.list({"running", "pending"})
+    job_ids = [j.id for j in jobs]
+    assert first_job.id not in job_ids
+    assert second_job.id not in job_ids
