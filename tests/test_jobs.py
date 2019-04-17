@@ -2,8 +2,10 @@ import asyncio
 
 from neuromation.api import JobStatus, Resources
 
+from platform_e2e import Helper
 
-async def test_unschedulable_job_lifecycle(helper):
+
+async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     # Remember original running jobs
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
@@ -46,7 +48,7 @@ async def test_unschedulable_job_lifecycle(helper):
     assert job.id not in job_ids
 
 
-async def test_two_jobs_at_once(helper):
+async def test_two_jobs_at_once(helper: Helper) -> None:
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
     first_job = await helper.run_job("ubuntu:latest", command)
