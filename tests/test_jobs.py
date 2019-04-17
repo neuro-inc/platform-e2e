@@ -1,4 +1,5 @@
 import asyncio
+from uuid import uuid4
 
 from neuromation.api import JobStatus, Resources
 
@@ -51,8 +52,8 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
 async def test_two_jobs_at_once(helper: Helper) -> None:
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
-    first_job = await helper.run_job("ubuntu:latest", command)
-    second_job = await helper.run_job("ubuntu:latest", command)
+    first_job = await helper.run_job("ubuntu:latest", command, wait_state=JobStatus.PENDING)
+    second_job = await helper.run_job("ubuntu:latest", command, wait_state=JobStatus.PENDING)
 
     # Check it is in a running,pending job list now
     jobs = await helper.client.jobs.list({"running", "pending"})
@@ -77,15 +78,20 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     assert second_job.id not in job_ids
 
 
-async def test_e2e_job_list_filtered_by_status(helper: Helper) -> None:
+async def test_job_list_filtered_by_status(helper: Helper) -> None:
     N_JOBS = 5
 
     # submit N jobs
     jobs = set()
     for _ in range(N_JOBS):
         command = "sleep 10m"
-        job = await helper.run_job("ubuntu:latest", command)
+        job = await helper.run_job(
+            "ubuntu:latest", command, wait_state=JobStatus.PENDING
+        )
         jobs.add(job.id)
+
+    for job in jobs:
+        await helper.wait_job_state(job, JobStatus.RUNNING)
 
     # test no status filters (same as pending+running)
     ret = await helper.client.jobs.list()
@@ -110,3 +116,35 @@ async def test_e2e_job_list_filtered_by_status(helper: Helper) -> None:
     jobs_ls_all_explicit = set(j.id for j in ret)
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_all_explicit >= jobs
+
+
+async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
+    N_JOBS = 5
+    jobs_name_map = dict()
+    name_0 = None
+    command = "sleep 10m"
+    for i in range(N_JOBS):
+        name = f"my-job-{uuid4()}"
+        if not name_0:
+            name_0 = name
+        job = await helper.run_job(
+            "ubuntu:latest", command, name=name, wait_state=JobStatus.PENDING
+        )
+        jobs_name_map[name] = job.id
+
+    for job in jobs_name_map.values():
+        await helper.wait_job_state(job, JobStatus.RUNNING)
+
+    # test filtering by name only
+    ret = await helper.client.jobs.list(name=name_0)
+    jobs_ls = set(j.id for j in ret)
+    assert jobs_ls == {jobs_name_map[name_0]}
+
+    # test filtering by name and single status
+    ret = await helper.client.jobs.list({"running"}, name=name_0)
+    jobs_ls = set(j.id for j in ret)
+    assert jobs_ls == {jobs_name_map[name_0]}
+
+    # test filtering by name and 2 statuses - no jobs found
+    ret = await helper.client.jobs.list({"failed", "succeeded"}, name=name_0)
+    assert not ret

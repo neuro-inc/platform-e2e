@@ -8,6 +8,10 @@ test:
 	pytest --durations 10 --timeout 300 --verbose tests
 
 
+test-verbose:
+	pytest --durations 10 --timeout 300 --verbose --log-cli-level=INFO tests
+
+
 format:
 	black $(SOURCES)
 	isort -rc $(SOURCES)

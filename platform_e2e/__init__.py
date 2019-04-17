@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import re
 from pathlib import Path
@@ -26,6 +27,8 @@ CLIENT_TIMEOUT = aiohttp.ClientTimeout(None, None, NETWORK_TIMEOUT, NETWORK_TIME
 JOB_OUTPUT_TIMEOUT = 60 * 5
 JOB_OUTPUT_SLEEP_SECONDS = 2
 
+log = logging.getLogger(__name__)
+
 
 class Helper:
     def __init__(self, client: Client) -> None:
@@ -47,9 +50,11 @@ class Helper:
         wait_state: JobStatus = JobStatus.RUNNING,
         network: Optional[NetworkPortForwarding] = None,
         resources: Optional[Resources] = None,
+        name: Optional[str] = None,
     ) -> JobDescription:
         if resources is None:
             resources = Resources.create(0.1, None, None, "20", True)
+        log.info("Submit job")
         job = await self.client.jobs.submit(
             image=Image(image, command=command),
             resources=resources,
@@ -57,6 +62,7 @@ class Helper:
             is_preemptible=False,
             volumes=None,
             description=description,
+            name=name,
         )
         return await self._wait_job_state(job, wait_state)
 
@@ -64,6 +70,7 @@ class Helper:
         self, job: JobDescription, wait_state: JobStatus
     ) -> JobDescription:
         for i in range(60):
+            log.info("Wait state %s: %s -> %s", wait_state, job.id, job.status)
             if job.status == wait_state:
                 break
             if (wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or (
@@ -94,6 +101,7 @@ class Helper:
         """
         async with aiohttp.ClientSession() as session:
             for i in range(3):
+                log.info("Probe %s", url)
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         return await resp.text()
@@ -117,6 +125,7 @@ class Helper:
         started_at = loop.time()
         chunks = []
         while loop.time() - started_at < JOB_OUTPUT_TIMEOUT:
+            log.info("Monitor %s", job_id)
             async for chunk in self.client.jobs.monitor(job_id):
                 if not chunk:
                     break
