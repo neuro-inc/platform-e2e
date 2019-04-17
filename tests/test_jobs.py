@@ -17,7 +17,9 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
         wait_state=JobStatus.PENDING,
     )
 
-    jobs = await helper.client.jobs.list({"running", "pending"})
+    jobs = await helper.client.jobs.list(
+        statuses={JobStatus.RUNNING, JobStatus.PENDING}
+    )
     jobs_updated = [j.id for j in jobs]
 
     assert job.id in jobs_updated
@@ -44,7 +46,9 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
         raise AssertionError(f"Timeout {job.id}: {job.status}")
 
     # Check that it is not in a running job list anymore
-    jobs = await helper.client.jobs.list({"running", "pending"})
+    jobs = await helper.client.jobs.list(
+        statuses={JobStatus.RUNNING, JobStatus.PENDING}
+    )
     job_ids = [j.id for j in jobs]
     assert job.id not in job_ids
 
@@ -60,7 +64,9 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     )
 
     # Check it is in a running,pending job list now
-    jobs = await helper.client.jobs.list({"running", "pending"})
+    jobs = await helper.client.jobs.list(
+        statuses={JobStatus.RUNNING, JobStatus.PENDING}
+    )
     job_ids = [j.id for j in jobs]
     assert first_job.id in job_ids
     assert second_job.id in job_ids
@@ -76,7 +82,9 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     await helper.wait_job_state(second_job.id, JobStatus.SUCCEEDED)
 
     # Check that it is not in a running job list anymore
-    jobs = await helper.client.jobs.list({"running", "pending"})
+    jobs = await helper.client.jobs.list(
+        statuses={JobStatus.RUNNING, JobStatus.PENDING}
+    )
     job_ids = [j.id for j in jobs]
     assert first_job.id not in job_ids
     assert second_job.id not in job_ids
@@ -104,19 +112,26 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
     assert jobs_ls_no_arg >= jobs
 
     # test single status filter
-    ret = await helper.client.jobs.list({"running"})
+    ret = await helper.client.jobs.list(statuses={JobStatus.RUNNING})
     jobs_ls_running = set(j.id for j in ret)
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_running >= jobs
 
     # test multiple status filters
-    ret = await helper.client.jobs.list({"running", "failed"})
+    ret = await helper.client.jobs.list(statuses={JobStatus.RUNNING, JobStatus.FAILED})
     jobs_ls_running = set(j.id for j in ret)
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_running >= jobs
 
     # status "all" is the same as pending+running+failed+succeeded
-    ret = await helper.client.jobs.list({"pending", "running", "failed", "succeeded"})
+    ret = await helper.client.jobs.list(
+        statuses={
+            JobStatus.PENDING,
+            JobStatus.RUNNING,
+            JobStatus.FAILED,
+            JobStatus.SUCCEEDED,
+        }
+    )
     jobs_ls_all_explicit = set(j.id for j in ret)
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_all_explicit >= jobs
@@ -147,10 +162,12 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
     assert jobs_ls == {jobs_name_map[name_0]}
 
     # test filtering by name and single status
-    ret = await helper.client.jobs.list({"running"}, name=name_0)
+    ret = await helper.client.jobs.list(statuses={JobStatus.RUNNING}, name=name_0)
     jobs_ls = set(j.id for j in ret)
     assert jobs_ls == {jobs_name_map[name_0]}
 
     # test filtering by name and 2 statuses - no jobs found
-    ret = await helper.client.jobs.list({"failed", "succeeded"}, name=name_0)
+    ret = await helper.client.jobs.list(
+        statuses={JobStatus.FAILED, JobStatus.SUCCEEDED}, name=name_0
+    )
     assert not ret
