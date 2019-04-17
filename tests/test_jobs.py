@@ -52,8 +52,12 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
 async def test_two_jobs_at_once(helper: Helper) -> None:
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
-    first_job = await helper.run_job("ubuntu:latest", command, wait_state=JobStatus.PENDING)
-    second_job = await helper.run_job("ubuntu:latest", command, wait_state=JobStatus.PENDING)
+    first_job = await helper.run_job(
+        "ubuntu:latest", command, wait_state=JobStatus.PENDING
+    )
+    second_job = await helper.run_job(
+        "ubuntu:latest", command, wait_state=JobStatus.PENDING
+    )
 
     # Check it is in a running,pending job list now
     jobs = await helper.client.jobs.list({"running", "pending"})
