@@ -13,7 +13,9 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     job = await helper.run_job(
         "ubuntu:latest",
         command,
-        resources=Resources.create(0.1, None, None, "200000000000", True),
+        resources=Resources(
+            cpu=0.1, gpu=None, gpu_model=None, memory_mb=200000000000, shm=True
+        ),
         wait_state=JobStatus.PENDING,
     )
 

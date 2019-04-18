@@ -53,7 +53,9 @@ class Helper:
         name: Optional[str] = None,
     ) -> JobDescription:
         if resources is None:
-            resources = Resources.create(0.1, None, None, "20", True)
+            resources = Resources(
+                cpu=0.1, gpu=None, gpu_model=None, memory_mb=20, shm=True
+            )
         log.info("Submit job")
         job = await self.client.jobs.submit(
             image=Image(image, command=command),
