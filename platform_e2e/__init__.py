@@ -52,7 +52,7 @@ class Helper:
 
     async def close(self) -> None:
         if self._has_root_storage:
-            await self.rmdir("")
+            await self.rm("")
             self._has_root_storage = False
         await self._client.close()
 
@@ -165,7 +165,7 @@ class Helper:
     async def rm(self, path: str) -> None:
         await self._client.storage.rm(self.tmpstorage / path)
 
-    async def ensure_root_storage(self):
+    async def ensure_root_storage(self) -> None:
         if not self._has_root_storage:
             self._has_root_storage = True
             await self.mkdir("")
@@ -182,7 +182,7 @@ class Helper:
                 generated += len(data)
         return hasher.hexdigest()
 
-    async def calc_storage_checksum(self, path: str) -> None:
+    async def calc_storage_checksum(self, path: str) -> str:
         tmp_file = self._tmp_path / (str(uuid4()) + ".tmp")
         await self._client.storage.download_file(
             self.tmpstorage / path, URL(tmp_file.as_uri())
@@ -243,7 +243,7 @@ async def helper(
 
 @pytest.fixture()
 async def helper_alt(
-    config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path
+    config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
     yield Helper(client, tmp_path)
