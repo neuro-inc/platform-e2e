@@ -37,7 +37,9 @@ class Helper:
     def __init__(self, client: Client, tmp_path: Path) -> None:
         self._client = client
         self._tmp_path = tmp_path
-        self._tmpstorage = URL("storage://" + client.username + '/' + str(uuid4()) + "/")
+        self._tmpstorage = URL(
+            "storage://" + client.username + "/" + str(uuid4()) + "/"
+        )
         self._has_root_storage = False
 
     @property
