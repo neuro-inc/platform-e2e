@@ -1,7 +1,9 @@
 import asyncio
+from pathlib import Path
 from uuid import uuid4
 
-from neuromation.api import JobStatus, Resources
+from neuromation.api import JobStatus, Resources, Volume
+from yarl import URL
 
 from platform_e2e import Helper
 
@@ -173,3 +175,39 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
         statuses={JobStatus.FAILED, JobStatus.SUCCEEDED}, name=name_0
     )
     assert not ret
+
+
+async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
+    # Create directory for the test
+    await helper.mkdir("data")
+
+    fname = tmp_path / (str(uuid4()) + ".tmp")
+    checksum = await helper.gen_random_file(fname, size=20_000_000)
+
+    # Upload local file
+    await helper.client.storage.upload_file(
+        URL(fname.as_uri()), helper.tmpstorage / "data" / "foo"
+    )
+
+    command = "cp /data/foo /res/foo"
+
+    await helper.run_job(
+        "ubuntu:latest",
+        command,
+        volumes=[
+            Volume(
+                storage_path=str(helper.tmpstorage / "data"),
+                container_path="/data",
+                read_only=True,
+            ),
+            Volume(
+                storage_path=str(helper.tmpstorage / "result"),
+                container_path="/res",
+                read_only=False,
+            ),
+        ],
+        wait_state=JobStatus.SUCCEEDED,
+    )
+
+    # Download into local dir and confirm checksum
+    assert checksum == await helper.calc_storage_checksum("result/foo")

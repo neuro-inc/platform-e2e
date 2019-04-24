@@ -1,9 +1,11 @@
 import asyncio
+import hashlib
 import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, AsyncIterator, Optional
+from typing import Any, AsyncIterator, List, Optional
+from uuid import uuid4
 
 import aiohttp
 import pytest
@@ -15,6 +17,7 @@ from neuromation.api import (
     JobStatus,
     NetworkPortForwarding,
     Resources,
+    Volume,
     get,
     login_with_token,
 )
@@ -31,14 +34,24 @@ log = logging.getLogger(__name__)
 
 
 class Helper:
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: Client, tmp_path: Path) -> None:
         self._client = client
+        self._tmp_path = tmp_path
+        self._tmpstorage = URL("storage://" + client.username + '/' + str(uuid4()) + "/")
+        self._has_root_storage = False
 
     @property
     def client(self) -> Client:
         return self._client
 
+    @property
+    def tmpstorage(self) -> URL:
+        return self._tmpstorage
+
     async def close(self) -> None:
+        if self._has_root_storage:
+            await self.rmdir("")
+            self._has_root_storage = False
         await self._client.close()
 
     async def run_job(
@@ -51,6 +64,7 @@ class Helper:
         network: Optional[NetworkPortForwarding] = None,
         resources: Optional[Resources] = None,
         name: Optional[str] = None,
+        volumes: Optional[List[Volume]] = None,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
@@ -62,7 +76,7 @@ class Helper:
             resources=resources,
             network=network,
             is_preemptible=False,
-            volumes=None,
+            volumes=volumes,
             description=description,
             name=name,
         )
@@ -142,6 +156,43 @@ class Helper:
             f"Output of job {job_id} does not satisfy to expected regexp: {expected}"
         )
 
+    async def mkdir(self, path: str) -> None:
+        await self.ensure_root_storage()
+        await self._client.storage.mkdirs(self.tmpstorage / path)
+
+    async def rm(self, path: str) -> None:
+        await self._client.storage.rm(self.tmpstorage / path)
+
+    async def ensure_root_storage(self):
+        if not self._has_root_storage:
+            self._has_root_storage = True
+            await self.mkdir("")
+
+    async def gen_random_file(self, path: Path, size: int) -> str:
+        hasher = hashlib.sha1()
+        with path.open("wb") as file:
+            generated = 0
+            while generated < size:
+                length = min(1024 * 1024, size - generated)
+                data = os.urandom(length)
+                file.write(data)
+                hasher.update(data)
+                generated += len(data)
+        return hasher.hexdigest()
+
+    async def calc_storage_checksum(self, path: str) -> None:
+        tmp_file = self._tmp_path / (str(uuid4()) + ".tmp")
+        await self._client.storage.download_file(
+            self.tmpstorage / path, URL(tmp_file.as_uri())
+        )
+        hasher = hashlib.sha1()
+        with tmp_file.open("rb") as file:
+            chunk = file.read(1024 * 1024)
+            while chunk:
+                hasher.update(chunk)
+                chunk = file.read(1024 * 1024)
+        return hasher.hexdigest()
+
 
 async def ensure_config(env_name: str, tmp_path_factory: Any) -> Optional[Path]:
     token = os.environ.get(env_name)
@@ -181,17 +232,17 @@ def config_path_alt(tmp_path_factory: Any) -> Path:
 
 @pytest.fixture()
 async def helper(
-    config_path: Path, loop: asyncio.AbstractEventLoop
+    config_path: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
-    yield Helper(client)
+    yield Helper(client, tmp_path)
     await client.close()
 
 
 @pytest.fixture()
 async def helper_alt(
-    config_path_alt: Path, loop: asyncio.AbstractEventLoop
+    config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
-    yield Helper(client)
+    yield Helper(client, tmp_path)
     await client.close()
