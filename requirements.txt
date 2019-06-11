@@ -6,5 +6,5 @@ flake8
 pytest-aiohttp
 pytest-timeout
 aiohttp
--e git+git@github.com:neuromation/platform-client-python.git#egg=neuromation
+-e git+git@github.com:neuromation/platform-client-python.git@master#egg=neuromation
 -e .
