@@ -1,8 +1,8 @@
-pytest
-mypy
-black
-isort
-flake8
-pytest-aiohttp
-pytest-timeout
-aiohttp
+pytest==4.4.0
+mypy==0.700
+black==19.3b0
+isort==4.3.17
+flake8==3.7.7
+pytest-aiohttp==0.3.0
+pytest-timeout==1.3.3
+aiohttp==3.5.4
