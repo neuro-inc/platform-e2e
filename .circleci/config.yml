@@ -1,5 +1,5 @@
 version: 2
-jobs:  
+jobs:
   build:
     docker:
       - image: circleci/python:3.7.2
@@ -25,3 +25,26 @@ jobs:
             . .env/bin/activate
             make test
 
+
+workflows:
+  version: 2
+
+  main:
+    jobs:
+      - build
+      context: org-global
+      filters:
+        tags:
+          only: /^v.*/
+
+  nightly:
+    jobs:
+      - build
+      context: org-global
+    triggers: #use the triggers key to indicate a scheduled build
+      - schedule:
+          cron: "0 0 * * *" # use cron syntax to set the schedule
+          filters:
+            branches:
+              only:
+                - master
