@@ -4,6 +4,7 @@ setup:
 	pip install -r requirements.txt
 	pip install -U -e git+git@github.com:neuromation/platform-client-python.git@master#egg=neuromation
 	pip install -e .
+	pip list|grep neuromation
 
 test:
 	pytest --durations 10 --timeout 300 --verbose tests
