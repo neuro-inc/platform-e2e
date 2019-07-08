@@ -12,10 +12,10 @@ import pytest
 from neuromation.api import (
     DEFAULT_CONFIG_PATH,
     Client,
-    Image,
+    Container,
+    HTTPPort,
     JobDescription,
     JobStatus,
-    NetworkPortForwarding,
     Resources,
     Volume,
     get,
@@ -63,24 +63,32 @@ class Helper:
         *,
         description: Optional[str] = None,
         wait_state: JobStatus = JobStatus.RUNNING,
-        network: Optional[NetworkPortForwarding] = None,
+        http: Optional[HTTPPort] = None,
         resources: Optional[Resources] = None,
         name: Optional[str] = None,
         volumes: Optional[List[Volume]] = None,
+        schedule_timeout: Optional[float] = None,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
                 cpu=0.1, gpu=None, gpu_model=None, memory_mb=20, shm=True
             )
+        if volumes is None:
+            volumes = []
         log.info("Submit job")
-        job = await self.client.jobs.submit(
-            image=Image(image, command=command),
+        container = Container(
+            image=image,
+            command=command,
             resources=resources,
-            network=network,
-            is_preemptible=False,
             volumes=volumes,
+            http=http,
+        )
+        job = await self.client.jobs.run(
+            container=container,
+            is_preemptible=False,
             description=description,
             name=name,
+            schedule_timeout=schedule_timeout,
         )
         return await self._wait_job_state(job, wait_state)
 

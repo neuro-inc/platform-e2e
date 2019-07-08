@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 import pytest
-from neuromation.api import JobDescription, NetworkPortForwarding
+from neuromation.api import HTTPPort, JobDescription
 
 from platform_e2e import Helper
 
@@ -20,9 +20,9 @@ def secret_job(helper: Helper, loop: asyncio.AbstractEventLoop) -> Any:
             f"timeout 15m /usr/sbin/nginx -g 'daemon off;'\""
         )
         if http_port:
-            network = NetworkPortForwarding.from_cli(80, http_auth)
+            http: Optional[HTTPPort] = HTTPPort(80, http_auth)
         else:
-            network = None
+            http = None
         if not description:
             description = "nginx with secret file"
             if http_port:
@@ -30,7 +30,7 @@ def secret_job(helper: Helper, loop: asyncio.AbstractEventLoop) -> Any:
                 if http_auth:
                     description += " with authentication"
         status: JobDescription = await helper.run_job(
-            "nginx:latest", command, description=description, network=network
+            "nginx:latest", command, description=description, http=http
         )
         return {
             "id": status.id,
