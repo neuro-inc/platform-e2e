@@ -19,6 +19,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
             cpu=0.1, gpu=None, gpu_model=None, memory_mb=200000000000, shm=True
         ),
         wait_state=JobStatus.PENDING,
+        schedule_timeout=15,
     )
 
     jobs = await helper.client.jobs.list(
@@ -29,25 +30,14 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     assert job.id in jobs_updated
     for i in range(10):
         job = await helper.client.jobs.status(job.id)
-        if job.history.reason == "Cluster doesn't have resources to fulfill request.":
+        if job.status != JobStatus.PENDING:
             break
         else:
             await asyncio.sleep(5)
     else:
         raise AssertionError(f"Timeout {job.id}: {job.status}")
 
-    # Kill the job
-    await helper.client.jobs.kill(job.id)
-
-    for i in range(10):
-        job = await helper.client.jobs.status(job.id)
-        # ASvetlov: hmm, should the status be FAILED?
-        if job.status == JobStatus.SUCCEEDED:
-            break
-        else:
-            await asyncio.sleep(5)
-    else:
-        raise AssertionError(f"Timeout {job.id}: {job.status}")
+    assert job.history.reason == "Cannot scaleup the cluster to get more resources."
 
     # Check that it is not in a running job list anymore
     jobs = await helper.client.jobs.list(
