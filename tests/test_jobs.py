@@ -39,7 +39,8 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
 
     assert job.history.reason == "ClusterScaleUpFailed"
     assert (
-        job.history.description == "Cannot scaleup the cluster to get more resources."
+        job.history.description
+        == "Failed to scale up the cluster to get more resources"
     )
     # Check that it is not in a running job list anymore
     jobs = await helper.client.jobs.list(
