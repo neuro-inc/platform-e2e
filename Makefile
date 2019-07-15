@@ -20,7 +20,7 @@ format:
 	isort -rc $(SOURCES)
 
 lint:
-	flake8
+	flake8 $(SOURCES)
 	black --check $(SOURCES)
 	isort --check -rc $(SOURCES)
 	mypy $(SOURCES)
