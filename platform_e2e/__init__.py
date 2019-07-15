@@ -21,6 +21,7 @@ from neuromation.api import (
     get,
     login_with_token,
 )
+from neuromation.api.parsing_utils import _ImageNameParser
 from neuromation.utils import run
 from yarl import URL
 
@@ -76,8 +77,11 @@ class Helper:
         if volumes is None:
             volumes = []
         log.info("Submit job")
+        remote_image = _ImageNameParser(
+            self.client.username, self.client._config.cluster_config.registry_url
+        ).parse_remote(image)
         container = Container(
-            image=image,
+            image=remote_image,
             command=command,
             resources=resources,
             volumes=volumes,
