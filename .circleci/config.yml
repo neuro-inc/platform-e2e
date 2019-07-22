@@ -24,6 +24,19 @@ jobs:
           command: |
             . .env/bin/activate
             make test
+  docker-build:
+    docker:
+      - image: circleci/python:3.7.2
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build image
+          command: make build
+      - run:
+          name: Test builded image
+          command: make docker-test
 
 
 workflows:
@@ -36,6 +49,12 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+
+  test-dev:
+    jobs:
+      - docker-build:
+          context: org-dev
+
 
   nightly:
     jobs:
