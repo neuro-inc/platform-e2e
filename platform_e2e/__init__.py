@@ -214,6 +214,8 @@ async def ensure_config(
     token = os.environ.get(token_env_name)
     uri = os.environ.get(uri_env_name, "https://dev.neu.ro/api/v1")
     if token is not None:
+        log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
+        log.info("Api URL: %s", uri)
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
         await login_with_token(
             token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
@@ -231,14 +233,15 @@ def config_path(tmp_path_factory: Any) -> Path:
             "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
         )
     )
-    if path is None:
-        path = Path(DEFAULT_CONFIG_PATH)
 
-    if not path.exists():
-        raise RuntimeError(
-            f"Neither config file({path}) exists "
-            f"nor ENV variable(CLIENT_TEST_E2E_USER_NAME) set"
-        )
+    if not path:
+        path = Path(DEFAULT_CONFIG_PATH).expanduser()
+        if not path.exists():
+            raise RuntimeError(
+                f"Neither config file({path}) exists "
+                f"nor ENV variable(CLIENT_TEST_E2E_USER_NAME) set"
+            )
+        log.info("Default config used: %s", path)
     return path
 
 

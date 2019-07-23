@@ -41,7 +41,7 @@ docker-test:
 	@$(DOCKER_CMD) test
 
 docker-test-verbose:
-	@$(DOCKER_CMD) test
+	@$(DOCKER_CMD) test-verbose
 
 docker-lint:
 	@$(DOCKER_CMD) lint
