@@ -208,16 +208,15 @@ class Helper:
         return hasher.hexdigest()
 
 
-async def ensure_config(token_env_name: str, uri_env_name: str, tmp_path_factory: Any) -> Optional[Path]:
+async def ensure_config(
+    token_env_name: str, uri_env_name: str, tmp_path_factory: Any
+) -> Optional[Path]:
     token = os.environ.get(token_env_name)
     uri = os.environ.get(uri_env_name, "https://dev.neu.ro/api/v1")
     if token is not None:
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
         await login_with_token(
-            token=token,
-            url=URL(uri),
-            timeout=CLIENT_TIMEOUT,
-            path=config_path,
+            token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
         )
         await asyncio.sleep(3)
         return config_path
@@ -227,7 +226,11 @@ async def ensure_config(token_env_name: str, uri_env_name: str, tmp_path_factory
 
 @pytest.fixture(scope="session")
 def config_path(tmp_path_factory: Any) -> Path:
-    path = run(ensure_config("CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory))
+    path = run(
+        ensure_config(
+            "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        )
+    )
     if path is None:
         return Path(DEFAULT_CONFIG_PATH)
     else:
@@ -236,7 +239,11 @@ def config_path(tmp_path_factory: Any) -> Path:
 
 @pytest.fixture(scope="session")
 def config_path_alt(tmp_path_factory: Any) -> Path:
-    path = run(ensure_config("CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory))
+    path = run(
+        ensure_config(
+            "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        )
+    )
     if path is None:
         # pytest.skip() actually raises an exception itself
         # raise statement is required for mypy checker

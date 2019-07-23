@@ -10,6 +10,9 @@ DOCKER_CMD := docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER
 build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
+build-dev:
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) --build-arg=PIP_EXTRA_INDEX_URL=$(PIP_EXTRA_INDEX_URL) .
+
 setup:
 	pip install -U pip
 	pip install -r requirements.txt
@@ -38,7 +41,10 @@ _docker-setup:
 	pip install -e .
 
 docker-test:
-	$(DOCKER_CMD) test
+	@$(DOCKER_CMD) test
+
+docker-test-verbose:
+	@$(DOCKER_CMD) test
 
 docker-lint:
-	$(DOCKER_CMD) lint
+	@$(DOCKER_CMD) lint

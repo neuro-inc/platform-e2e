@@ -1,9 +1,19 @@
-version: 2
+version: 2.1
+executors:
+    python:
+      docker:
+        - image: circleci/python:3.7.2
+
+defaults: &defaults
+  executor: python
+  working_directory: ~/repo
+
+orbs:
+  gcloud: circleci/gcp-cli@1.3.0
+
 jobs:
   build:
-    docker:
-      - image: circleci/python:3.7.2
-    working_directory: ~/repo
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -24,19 +34,17 @@ jobs:
           command: |
             . .env/bin/activate
             make test
-  docker-build:
-    docker:
-      - image: circleci/python:3.7.2
-    working_directory: ~/repo
+  publish:
+    <<: *defaults
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Build image
-          command: make build
-      - run:
-          name: Test builded image
-          command: make docker-test
+      - artifactory/docker-publish:
+          artifactory-key: ARTIFACTORY_PASSWORD
+          artifactory-user: ARTIFACTORY_USERNAME
+          docker-registry: https://$ARTIFACTORY_DOCKER_REPO
+          docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+
 
 
 workflows:
@@ -49,12 +57,13 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-
-  test-dev:
-    jobs:
-      - docker-build:
-          context: org-dev
-
+      - publish:
+          context: org-global
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v.*/
 
   nightly:
     jobs:
