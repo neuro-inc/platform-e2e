@@ -45,7 +45,7 @@ jobs:
           artifactory-user: ARTIFACTORY_USERNAME
           docker-registry: https://$ARTIFACTORY_DOCKER_REPO
           docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
-
+          repository: neuro-docker-local-public
 
 
 workflows:
