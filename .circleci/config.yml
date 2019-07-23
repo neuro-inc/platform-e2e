@@ -70,7 +70,7 @@ workflows:
           context: org-global
           filters:
             tags:
-              only: /^v.*/
+              ignore: /^v.*/
       - publish:
           context: org-global
           filters:
