@@ -232,9 +232,14 @@ def config_path(tmp_path_factory: Any) -> Path:
         )
     )
     if path is None:
-        return Path(DEFAULT_CONFIG_PATH)
-    else:
-        return path
+        path = Path(DEFAULT_CONFIG_PATH)
+
+    if not path.exists():
+        raise RuntimeError(
+            f"Neither config file({path}) exists "
+            f"nor ENV variable(CLIENT_TEST_E2E_USER_NAME) set"
+        )
+    return path
 
 
 @pytest.fixture(scope="session")
