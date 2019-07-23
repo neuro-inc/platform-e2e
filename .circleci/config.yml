@@ -1,9 +1,19 @@
-version: 2
+version: 2.1
+executors:
+    python:
+      docker:
+        - image: circleci/python:3.7.2
+
+defaults: &defaults
+  executor: python
+  working_directory: ~/repo
+
+orbs:
+  artifactory: circleci/artifactory@1.0.0
+
 jobs:
   build:
-    docker:
-      - image: circleci/python:3.7.2
-    working_directory: ~/repo
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -24,6 +34,36 @@ jobs:
           command: |
             . .env/bin/activate
             make test
+  publish:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: |
+            make build
+            docker tag platform-e2e:latest $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+            docker tag platform-e2e:latest $ARTIFACTORY_DOCKER_REPO/platform-e2e:latest
+
+      - run:
+          name: Test image
+          command: make docker-test
+      - artifactory/install
+      - artifactory/configure:
+          artifactory-key: ARTIFACTORY_PASSWORD
+          artifactory-user: ARTIFACTORY_USERNAME
+          artifactory-url: ARTIFACTORY_URL
+      - artifactory/docker-login:
+          artifactory-key: ARTIFACTORY_PASSWORD
+          artifactory-user: ARTIFACTORY_USERNAME
+          docker-registry: https://$ARTIFACTORY_DOCKER_REPO
+      - artifactory/docker-publish:
+          docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+          repository: $ARTIFACTORY_DOCKER_REPO_NAME
+      - artifactory/docker-publish:
+          docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:latest
+          repository: $ARTIFACTORY_DOCKER_REPO_NAME
 
 
 workflows:
@@ -35,7 +75,14 @@ workflows:
           context: org-global
           filters:
             tags:
+              ignore: /^v.*/
+      - publish:
+          context: org-global
+          filters:
+            tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
 
   nightly:
     jobs:

@@ -208,15 +208,17 @@ class Helper:
         return hasher.hexdigest()
 
 
-async def ensure_config(env_name: str, tmp_path_factory: Any) -> Optional[Path]:
-    token = os.environ.get(env_name)
+async def ensure_config(
+    token_env_name: str, uri_env_name: str, tmp_path_factory: Any
+) -> Optional[Path]:
+    token = os.environ.get(token_env_name)
+    uri = os.environ.get(uri_env_name, "https://dev.neu.ro/api/v1")
     if token is not None:
-        config_path = tmp_path_factory.mktemp(env_name.lower()) / ".nmrc"
+        log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
+        log.info("Api URL: %s", uri)
+        config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
         await login_with_token(
-            token=token,
-            url=URL("https://dev.neu.ro/api/v1"),
-            timeout=CLIENT_TIMEOUT,
-            path=config_path,
+            token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
         )
         await asyncio.sleep(3)
         return config_path
@@ -226,16 +228,30 @@ async def ensure_config(env_name: str, tmp_path_factory: Any) -> Optional[Path]:
 
 @pytest.fixture(scope="session")
 def config_path(tmp_path_factory: Any) -> Path:
-    path = run(ensure_config("CLIENT_TEST_E2E_USER_NAME", tmp_path_factory))
-    if path is None:
-        return Path(DEFAULT_CONFIG_PATH)
-    else:
-        return path
+    path = run(
+        ensure_config(
+            "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        )
+    )
+
+    if not path:
+        path = Path(DEFAULT_CONFIG_PATH).expanduser()
+        if not path.exists():
+            raise RuntimeError(
+                f"Neither config file({path}) exists "
+                f"nor ENV variable(CLIENT_TEST_E2E_USER_NAME) set"
+            )
+        log.info("Default config used: %s", path)
+    return path
 
 
 @pytest.fixture(scope="session")
 def config_path_alt(tmp_path_factory: Any) -> Path:
-    path = run(ensure_config("CLIENT_TEST_E2E_USER_NAME_ALT", tmp_path_factory))
+    path = run(
+        ensure_config(
+            "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        )
+    )
     if path is None:
         # pytest.skip() actually raises an exception itself
         # raise statement is required for mypy checker
