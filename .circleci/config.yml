@@ -44,6 +44,8 @@ jobs:
           command: |
             make build IMAGE_TAG=$CIRCLE_TAG
             docker tag platform-e2e:$CIRCLE_TAG $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+            docker tag platform-e2e:$CIRCLE_TAG $ARTIFACTORY_DOCKER_REPO/platform-e2e:latest
+
       - run:
           name: Test image
           command: make docker-test
@@ -58,6 +60,9 @@ jobs:
           docker-registry: https://$ARTIFACTORY_DOCKER_REPO
       - artifactory/docker-publish:
           docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+          repository: $ARTIFACTORY_DOCKER_REPO_NAME
+      - artifactory/docker-publish:
+          docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:latest
           repository: $ARTIFACTORY_DOCKER_REPO_NAME
 
 
