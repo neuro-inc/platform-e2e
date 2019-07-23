@@ -44,7 +44,7 @@ jobs:
       - artifactory/configure:
           artifactory-key: ARTIFACTORY_PASSWORD
           artifactory-user: ARTIFACTORY_USERNAME
-          artifactory-url: https://neuro.jfrog.io/neuro
+          artifactory-url: ARTIFACTORY_URL
 
       - artifactory/docker-login:
           artifactory-key: ARTIFACTORY_PASSWORD
