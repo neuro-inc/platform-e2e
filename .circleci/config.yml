@@ -9,7 +9,6 @@ defaults: &defaults
   working_directory: ~/repo
 
 orbs:
-  gcloud: circleci/gcp-cli@1.3.0
   artifactory: circleci/artifactory@1.0.0
 
 jobs:
