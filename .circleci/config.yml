@@ -40,12 +40,14 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - artifactory/docker-publish:
+      - artifactory/install
+      - artifactory/docker-login:
           artifactory-key: ARTIFACTORY_PASSWORD
           artifactory-user: ARTIFACTORY_USERNAME
           docker-registry: https://$ARTIFACTORY_DOCKER_REPO
+      - artifactory/docker-publish:
           docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
-          repository: neuro-docker-local-public
+          repository: docker-local-public
 
 
 workflows:
