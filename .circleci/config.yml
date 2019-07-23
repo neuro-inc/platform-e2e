@@ -57,7 +57,7 @@ jobs:
           docker-registry: https://$ARTIFACTORY_DOCKER_REPO
       - artifactory/docker-publish:
           docker-tag: $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
-          repository: docker-local-public
+          repository: $ARTIFACTORY_DOCKER_REPO_NAME
 
 
 workflows:
@@ -65,15 +65,15 @@ workflows:
 
   main:
     jobs:
-#      - build:
-#          context: org-global
-#          filters:
-#            tags:
-#              only: /^v.*/
+      - build:
+          context: org-global
+          filters:
+            tags:
+              only: /^v.*/
       - publish:
           context: org-global
-#          requires:
-#            - build
+          requires:
+            - build
           filters:
             tags:
               only: /^v.*/
