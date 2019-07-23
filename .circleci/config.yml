@@ -44,6 +44,9 @@ jobs:
           command: |
             make build IMAGE_TAG=$CIRCLE_TAG
             docker tag platform-e2e:$CIRCLE_TAG $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
+      - run:
+          name: Test image
+          command: make docker-test
       - artifactory/install
       - artifactory/configure:
           artifactory-key: ARTIFACTORY_PASSWORD
@@ -70,8 +73,6 @@ workflows:
               only: /^v.*/
       - publish:
           context: org-global
-          requires:
-            - build
           filters:
             tags:
               only: /^v.*/
