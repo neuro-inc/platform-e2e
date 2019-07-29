@@ -24,11 +24,11 @@ create_user() {
     local NAME=$1
     local ADMIN_TOKEN=$2
     echo -n "Creating user: ${NAME} ..."
-    curl -s  --fail \
+    curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      ${API_URL}/users/${NAME} -X PUT \
-      -d '{"name":"${NAME}", "cluster_name": "${CLUSTER_NAME}"}'
+      ${API_URL}/users -X POST \
+      -d '{"name":"'${NAME}'", "cluster_name": "'${CLUSTER_NAME}'"}'
     if [[ $? -ne 0 ]]
     then
       echo "Fail"
@@ -42,7 +42,7 @@ user_token() {
     local ADMIN_TOKEN=$2
     local FAIL=$3
     echo  -n "Fetching user token: ${NAME} ..."
-    USER_TOKEN=`curl -s --fail \
+    USER_TOKEN_PAYLOAD=`curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
       ${API_URL}/users/${NAME}/token -X POST`
@@ -56,6 +56,7 @@ user_token() {
       USER_TOKEN=""
     else
       echo "Ok"
+      USER_TOKEN=$(echo $USER_TOKEN_PAYLOAD | grep -Po '(?<="access_token": ")[^"]+')
     fi
 }
 
@@ -63,14 +64,19 @@ user_token() {
 if [ -z "$CLUSTER_NAME" ]
 then
     echo "Usage: cluster-test.sh CLUSTER_NAME"
+    echo "--default-cluster for neuromation cluster"
     exit -1
+fi
+if [ "$CLUSTER_NAME" eq "--default-cluster"]
+then
+  CLUSTER_NAME=""
 fi
 
 
 if [ -z "$CLIENT_TEST_E2E_USER_NAME" ]
 then
     check_admin_token
-    USER_NAME="neuromation_service_$CLUSTER_NAME"
+    USER_NAME="neuromation-service-$CLUSTER_NAME"
     user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
     if [ -z "${USER_TOKEN}" ]
     then
@@ -80,10 +86,11 @@ then
     CLIENT_TEST_E2E_USER_NAME="${USER_TOKEN}"
 fi
 
+
 if [ -z "$CLIENT_TEST_E2E_USER_NAME_ALT" ]
 then
     check_admin_token
-    USER_NAME="neuromation_test_$CLUSTER_NAME"
+    USER_NAME="neuromation-test-$CLUSTER_NAME"
     user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
     if [ -z "${USER_TOKEN}" ]
     then
