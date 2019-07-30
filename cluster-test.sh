@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 CLUSTER_NAME=$1
+NATIVE=$2
 API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
 USER_TOKEN=""
+IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
+IMAGE_TAG=${IMAGE_TAG:-latest}
+DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
+
 
 die() {
     local MESSAGE=${1:-Unknown error}
@@ -63,8 +68,9 @@ user_token() {
 
 if [ -z "$CLUSTER_NAME" ]
 then
-    echo "Usage: cluster-test.sh CLUSTER_NAME"
+    echo "Usage: cluster-test.sh [CLUSTER_NAME|--default-cluster][ --native]"
     echo "--default-cluster for neuromation cluster"
+    echo "--native for runing without docker image"
     exit -1
 fi
 
@@ -104,5 +110,9 @@ fi
 export CLIENT_TEST_E2E_USER_NAME
 export CLIENT_TEST_E2E_USER_NAME_ALT
 export CLIENT_TEST_E2E_URL
-
-make docker-test
+if [ "$NATIVE" == "--native" ]
+then
+  make test
+else
+  $DOCKER_CMD test
+fi
