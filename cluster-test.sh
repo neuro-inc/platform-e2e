@@ -67,7 +67,8 @@ then
     echo "--default-cluster for neuromation cluster"
     exit -1
 fi
-if [ "$CLUSTER_NAME" eq "--default-cluster"]
+
+if [ "$CLUSTER_NAME" = "--default-cluster" ]
 then
   CLUSTER_NAME=""
 fi
@@ -104,6 +105,4 @@ export CLIENT_TEST_E2E_USER_NAME
 export CLIENT_TEST_E2E_USER_NAME_ALT
 export CLIENT_TEST_E2E_URL
 
-make test
-
-
+make docker-test
