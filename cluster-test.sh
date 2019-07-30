@@ -1,26 +1,24 @@
 #!/usr/bin/env bash
 
 CLUSTER_NAME=$1
-NATIVE=$2
+RUN_MODE=$2
+
 API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
 USER_TOKEN=""
-IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
-IMAGE_TAG=${IMAGE_TAG:-latest}
-DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
 
 
 die() {
-    local MESSAGE=${1:-Unknown error}
-    echo
-    echo "*** Error ***"
-    echo ${MESSAGE}
+    local MESSAGE=${1:-Unknown error} >&2
+    echo >&2
+    echo "*** Error ***" >&2
+    echo ${MESSAGE} >&2
     exit -1
 }
 
 check_admin_token() {
   if [[ -z "$CLIENT_TEST_E2E_ADMIN_TOKEN" ]]
   then
-    die "Admin token empty: CLIENT_TEST_E2E_ADMIN_TOKEN"
+    die "Admin token ENV variable empty: CLIENT_TEST_E2E_ADMIN_TOKEN"
   fi
 
 }
@@ -68,15 +66,15 @@ user_token() {
 
 if [ -z "$CLUSTER_NAME" ]
 then
-    echo "Usage: cluster-test.sh [CLUSTER_NAME|--default-cluster][ --native]"
+    echo "Usage: cluster-test.sh [CLUSTER_NAME|--default-cluster][ --docker]"
     echo "--default-cluster for neuromation cluster"
-    echo "--native for runing without docker image"
+    echo "--docker for runing tests inside docker image"
     exit -1
 fi
 
 if [ "$CLUSTER_NAME" = "--default-cluster" ]
 then
-  CLUSTER_NAME=""
+  CLUSTER_NAME="default-cluster"
 fi
 
 
@@ -110,9 +108,12 @@ fi
 export CLIENT_TEST_E2E_USER_NAME
 export CLIENT_TEST_E2E_USER_NAME_ALT
 export CLIENT_TEST_E2E_URL
-if [ "$NATIVE" == "--native" ]
+if [ "$RUN_MODE" = "--docker" ]
 then
-  make test
-else
+  IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
+  IMAGE_TAG=${IMAGE_TAG:-latest}
+  DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
   $DOCKER_CMD test
+else
+  make test
 fi

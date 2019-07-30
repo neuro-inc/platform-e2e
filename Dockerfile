@@ -1,7 +1,7 @@
 FROM python:3.7-slim
 
 RUN apt-get -qy update && \
-    apt-get -qy install build-essential make && \
+    apt-get -qy install build-essential make curl && \
     apt-get -qy clean
 
 COPY . /platform-e2e

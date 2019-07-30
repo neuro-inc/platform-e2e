@@ -48,7 +48,7 @@ jobs:
 
       - run:
           name: Test image
-          command: make docker-test
+          command: make cluster-test
       - artifactory/install
       - artifactory/configure:
           artifactory-key: ARTIFACTORY_PASSWORD
