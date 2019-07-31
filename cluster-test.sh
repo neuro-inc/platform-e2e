@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-CLUSTER_NAME=$1
-RUN_MODE=$2
 
-API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
-USER_TOKEN=""
 
 
 die() {
-    local MESSAGE=${1:-Unknown error} >&2
+    local MESSAGE=${1:-Unknown error}
     echo >&2
     echo "*** Error ***" >&2
     echo ${MESSAGE} >&2
-    exit -1
+    exit 1
+}
+
+info() {
+      echo $@ >&2
 }
 
 check_admin_token() {
@@ -26,7 +26,7 @@ check_admin_token() {
 create_user() {
     local NAME=$1
     local ADMIN_TOKEN=$2
-    echo -n "Creating user: ${NAME} ..."
+    info -n "Creating user: ${NAME} ..."
     curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
@@ -34,61 +34,77 @@ create_user() {
       -d '{"name":"'${NAME}'", "cluster_name": "'${CLUSTER_NAME}'"}'
     if [[ $? -ne 0 ]]
     then
-      echo "Fail"
+      info "Fail"
       die "Cannot create user: ${NAME}"
     fi
-    echo "Ok"
+    info "Ok"
 }
 
 user_token() {
     local NAME=$1
     local ADMIN_TOKEN=$2
     local FAIL=$3
-    echo  -n "Fetching user token: ${NAME} ..."
-    USER_TOKEN_PAYLOAD=`curl -sS --fail \
+
+    info -n "Fetching user token: ${NAME} ..."
+    local USER_TOKEN_PAYLOAD=`curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
       ${API_URL}/users/${NAME}/token -X POST`
     if [ $? -ne 0 ]
     then
-      echo "Failed"
+      info "Failed"
       if [ ! -z "$FAIL" ]
       then
         die "Cannot fetch user token: $NAME"
       fi
-      USER_TOKEN=""
     else
-      echo "Ok"
-      USER_TOKEN=$(echo $USER_TOKEN_PAYLOAD | grep -Po '(?<="access_token": ")[^"]+')
+      info "Ok"
+      echo -n $(echo $USER_TOKEN_PAYLOAD | grep -Po '(?<="access_token": ")[^"]+')
     fi
 }
 
+usage() {
+    echo "Usage: cluster-test.sh OPTIONS"
+    echo
+    echo "Options:"
+    echo "  -c CLUSTER_NAME name of cluster, optional"
+    echo "  -d for runing tests inside docker image"
+    exit 1
+}
 
-if [ -z "$CLUSTER_NAME" ]
-then
-    echo "Usage: cluster-test.sh [CLUSTER_NAME|--default-cluster][ --docker]"
-    echo "--default-cluster for neuromation cluster"
-    echo "--docker for runing tests inside docker image"
-    exit -1
-fi
 
-if [ "$CLUSTER_NAME" = "--default-cluster" ]
-then
-  CLUSTER_NAME="default-cluster"
-fi
+CLUSTER_NAME=default
+RUN_MODE=native
+API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
 
+while getopts c:d OPTION; do
+  case "$OPTION" in
+    c)
+      CLUSTER_NAME=$OPTARG
+      ;;
+    d)
+      RUN_MODE=docker
+      ;;
+    ?)
+      usage
+      ;;
+  esac
+done
+
+info "Cluster: $CLUSTER_NAME"
 
 if [ -z "$CLIENT_TEST_E2E_USER_NAME" ]
 then
     check_admin_token
     USER_NAME="neuromation-service-$CLUSTER_NAME"
-    user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
-    if [ -z "${USER_TOKEN}" ]
+    CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN)
+    if [ -z "${CLIENT_TEST_E2E_USER_NAME}" ]
     then
         create_user $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
-        user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true
+        CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
-    CLIENT_TEST_E2E_USER_NAME="${USER_TOKEN}"
+else
+  info "Using existing CLIENT_TEST_E2E_USER_NAME"
 fi
 
 
@@ -96,24 +112,27 @@ if [ -z "$CLIENT_TEST_E2E_USER_NAME_ALT" ]
 then
     check_admin_token
     USER_NAME="neuromation-test-$CLUSTER_NAME"
-    user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
-    if [ -z "${USER_TOKEN}" ]
+    CLIENT_TEST_E2E_USER_NAME_ALT=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN)
+    if [ -z "${CLIENT_TEST_E2E_USER_NAME_ALT}" ]
     then
         create_user $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
-        user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true
+        CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
-    CLIENT_TEST_E2E_USER_NAME_ALT="${USER_TOKEN}"
+else
+  info "Using existing CLIENT_TEST_E2E_USER_NAME_ALT"
 fi
 
 export CLIENT_TEST_E2E_USER_NAME
 export CLIENT_TEST_E2E_USER_NAME_ALT
 export CLIENT_TEST_E2E_URL
-if [ "$RUN_MODE" = "--docker" ]
+if [ "$RUN_MODE" = "docker" ]
 then
+  info "Run tests in docker image"
   IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
   IMAGE_TAG=${IMAGE_TAG:-latest}
   DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
   $DOCKER_CMD test
 else
+  info "Run tests"
   make test
 fi

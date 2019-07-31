@@ -1,7 +1,7 @@
 IMAGE_NAME ?= platform-e2e
 IMAGE_TAG ?= latest
 IMAGE ?= $(GKE_DOCKER_REGISTRY)/$(GKE_PROJECT_ID)/$(IMAGE_NAME)
-CLUSTER_NAME ?= "--default-cluster"
+CLUSTER_NAME ?= "default"
 SOURCES = setup.py platform_e2e tests
 
 DOCKER_CMD := docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI $(IMAGE_NAME):$(IMAGE_TAG)
@@ -47,4 +47,4 @@ docker-lint:
 	@$(DOCKER_CMD) lint
 
 cluster-test:
-	./cluster-test.sh $(CLUSTER_NAME) --native
+	./cluster-test.sh -c $(CLUSTER_NAME) --native
