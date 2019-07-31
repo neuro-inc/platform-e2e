@@ -10,11 +10,15 @@ Run e2e tests inside docker image or on the host.
 
 Usage:
 ```bash
-cluster-test.sh [CLUSTER_NAME|--default-cluster][ --docker]
+Usage: cluster-test.sh OPTIONS
+
+Options:
+  -c CLUSTER_NAME name of cluster, optional
+  -d for runing tests inside docker image
 ```
 By default script will run tests in `native` mode. Configured python and make required.
 
-For `--docker` mode only docker  and latest `platform-e2e` image required.
+For `docker` mode only docker  and latest `platform-e2e` image required.
 
 
 ### Optional ENV vars
