@@ -47,4 +47,4 @@ docker-lint:
 	@$(DOCKER_CMD) lint
 
 cluster-test:
-	./cluster-test.sh -c $(CLUSTER_NAME) --native
+	./cluster-test.sh -c $(CLUSTER_NAME)
