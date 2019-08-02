@@ -38,7 +38,7 @@ jobs:
     <<: *defaults
     environment:
       ARTIFACTORY_DOCKER_REPO: neuro-docker-local-private.jfrog.io
-      ARTIFACTORY_DOCKER_REPO_NAME: neuro-docker-local-private
+      ARTIFACTORY_DOCKER_REPO_NAME: docker-local-private
     steps:
       - checkout
       - setup_remote_docker
