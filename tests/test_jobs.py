@@ -189,12 +189,12 @@ async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
         command,
         volumes=[
             Volume(
-                storage_path=str(helper.tmpstorage / "data"),
+                storage_uri=helper.tmpstorage / "data",
                 container_path="/data",
                 read_only=True,
             ),
             Volume(
-                storage_path=str(helper.tmpstorage / "result"),
+                storage_uri=helper.tmpstorage / "result",
                 container_path="/res",
                 read_only=False,
             ),

@@ -22,7 +22,7 @@ from neuromation.api import (
     login_with_token,
 )
 from neuromation.api.parsing_utils import _ImageNameParser
-from neuromation.utils import run
+from neuromation.cli.asyncio_utils import run
 from yarl import URL
 
 
