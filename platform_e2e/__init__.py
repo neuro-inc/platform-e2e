@@ -222,12 +222,13 @@ def ensure_config(
         log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
         log.info("Api URL: %s", uri)
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.run_until_complete(
             login_with_token(
                 token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
             )
         )
+        loop.close()
         return config_path
     else:
         return None
