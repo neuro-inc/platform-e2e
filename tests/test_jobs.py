@@ -16,7 +16,13 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
         "ubuntu:latest",
         command,
         resources=Resources(
-            cpu=0.1, gpu=None, gpu_model=None, memory_mb=200000000000, shm=True
+            cpu=0.1,
+            gpu=None,
+            gpu_model=None,
+            memory_mb=200000000000,
+            shm=True,
+            tpu_type=None,
+            tpu_software_version=None,
         ),
         wait_state=JobStatus.PENDING,
         schedule_timeout=15,
@@ -189,12 +195,12 @@ async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
         command,
         volumes=[
             Volume(
-                storage_path=str(helper.tmpstorage / "data"),
+                storage_uri=helper.tmpstorage / "data",
                 container_path="/data",
                 read_only=True,
             ),
             Volume(
-                storage_path=str(helper.tmpstorage / "result"),
+                storage_uri=helper.tmpstorage / "result",
                 container_path="/res",
                 read_only=False,
             ),
