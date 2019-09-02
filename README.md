@@ -36,7 +36,7 @@ Next ENV variables required:
 
 * CLIENT_TEST_E2E_ADMIN_TOKEN - admin token with `USERS_MANAGE` permission
 
-In this mode script will check if `neuromation-service-$CLUSTER_NAME` and `neuromation-test-$CLUSTER_NAME` users exist. If not then script will create these users self and then sue their tokens for tests.
+In this mode script will check if `neuro-{sha1(CLUSTER_NAME)[0:16]}-{1,2}` users exist. If not then script will create these users self and then use their tokens for tests.
 
 
 

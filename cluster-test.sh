@@ -96,7 +96,8 @@ info "Cluster: $CLUSTER_NAME"
 if [ -z "$CLIENT_TEST_E2E_USER_NAME" ]
 then
     check_admin_token
-    USER_NAME="neuromation-service-$CLUSTER_NAME"
+    HASH=$(echo -n $CLUSTER_NAME | sha1sum)
+    USER_NAME="neuro-${HASH:0:16}-1"
     CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN)
     if [ -z "${CLIENT_TEST_E2E_USER_NAME}" ]
     then
@@ -111,7 +112,8 @@ fi
 if [ -z "$CLIENT_TEST_E2E_USER_NAME_ALT" ]
 then
     check_admin_token
-    USER_NAME="neuromation-test-$CLUSTER_NAME"
+    HASH=$(echo -n $CLUSTER_NAME | sha1sum)
+    USER_NAME="neuro-${HASH:0:16}-2"
     CLIENT_TEST_E2E_USER_NAME_ALT=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN)
     if [ -z "${CLIENT_TEST_E2E_USER_NAME_ALT}" ]
     then
