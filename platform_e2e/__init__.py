@@ -22,7 +22,6 @@ from neuromation.api import (
     login_with_token,
 )
 from neuromation.api.parsing_utils import _ImageNameParser
-from neuromation.utils import run
 from yarl import URL
 
 
@@ -72,7 +71,13 @@ class Helper:
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
-                cpu=0.1, gpu=None, gpu_model=None, memory_mb=20, shm=True
+                cpu=0.1,
+                gpu=None,
+                gpu_model=None,
+                memory_mb=20,
+                shm=True,
+                tpu_software_version=None,
+                tpu_type=None,
             )
         if volumes is None:
             volumes = []
@@ -172,7 +177,7 @@ class Helper:
 
     async def mkdir(self, path: str) -> None:
         await self.ensure_root_storage()
-        await self._client.storage.mkdirs(self.tmpstorage / path)
+        await self._client.storage.mkdir(self.tmpstorage / path)
 
     async def rm(self, path: str) -> None:
         await self._client.storage.rm(self.tmpstorage / path)
@@ -208,7 +213,7 @@ class Helper:
         return hasher.hexdigest()
 
 
-async def ensure_config(
+def ensure_config(
     token_env_name: str, uri_env_name: str, tmp_path_factory: Any
 ) -> Optional[Path]:
     token = os.environ.get(token_env_name)
@@ -217,10 +222,12 @@ async def ensure_config(
         log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
         log.info("Api URL: %s", uri)
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
-        await login_with_token(
-            token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
+        loop = asyncio.get_event_loop()
+        config_path = loop.run_until_complete(
+            login_with_token(
+                token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
+            )
         )
-        await asyncio.sleep(3)
         return config_path
     else:
         return None
@@ -228,10 +235,8 @@ async def ensure_config(
 
 @pytest.fixture(scope="session")
 def config_path(tmp_path_factory: Any) -> Path:
-    path = run(
-        ensure_config(
-            "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
-        )
+    path = ensure_config(
+        "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
     )
 
     if not path:
@@ -247,10 +252,8 @@ def config_path(tmp_path_factory: Any) -> Path:
 
 @pytest.fixture(scope="session")
 def config_path_alt(tmp_path_factory: Any) -> Path:
-    path = run(
-        ensure_config(
-            "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
-        )
+    path = ensure_config(
+        "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
     )
     if path is None:
         # pytest.skip() actually raises an exception itself
