@@ -50,6 +50,14 @@ class Helper:
     def tmpstorage(self) -> URL:
         return self._tmpstorage
 
+    @property
+    def registry(self) -> URL:
+        return self._client._config.cluster_config.registry_url
+
+    @property
+    def username(self) -> str:
+        return self._client.username
+
     async def close(self) -> None:
         if self._has_root_storage:
             await self.rm("")
@@ -59,7 +67,7 @@ class Helper:
     async def run_job(
         self,
         image: str,
-        command: str,
+        command: Optional[str] = None,
         *,
         description: Optional[str] = None,
         wait_state: JobStatus = JobStatus.RUNNING,
