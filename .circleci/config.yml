@@ -28,7 +28,7 @@ jobs:
           command: |
             . .env/bin/activate
             make lint
-
+      - setup_remote_docker
       - run:
           name: test
           command: |
