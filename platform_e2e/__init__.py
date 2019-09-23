@@ -3,13 +3,16 @@ import hashlib
 import logging
 import os
 import re
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, AsyncIterator, List, Optional
+from subprocess import PIPE, run
+from typing import Any, AsyncIterator, Callable, Iterator, List, Optional
 from uuid import uuid4
 
 import aiohttp
 import pytest
 from neuromation.api import (
+    CONFIG_ENV_NAME,
     DEFAULT_CONFIG_PATH,
     Client,
     Container,
@@ -34,9 +37,10 @@ log = logging.getLogger(__name__)
 
 
 class Helper:
-    def __init__(self, client: Client, tmp_path: Path) -> None:
+    def __init__(self, client: Client, tmp_path: Path, config_path: Path) -> None:
         self._client = client
         self._tmp_path = tmp_path
+        self._config_path = config_path
         self._tmpstorage = URL(
             "storage://" + client.username + "/" + str(uuid4()) + "/"
         )
@@ -57,6 +61,10 @@ class Helper:
     @property
     def username(self) -> str:
         return self._client.username
+
+    @property
+    def config_path(self) -> Path:
+        return self._config_path
 
     async def close(self) -> None:
         if self._has_root_storage:
@@ -220,6 +228,25 @@ class Helper:
                 chunk = file.read(1024 * 1024)
         return hasher.hexdigest()
 
+    @contextmanager
+    def docker_context(
+        self, monkeypatch: Any, shell: Callable[..., str]
+    ) -> Iterator[None]:
+        with monkeypatch.context() as context:
+            # docker support
+            context.setenv("DOCKER_CONFIG", self._tmp_path)
+
+            # podman support
+            docker_config = self._tmp_path / "config.json"
+            monkeypatch.setenv("REGISTRY_AUTH_FILE", f"{docker_config}")
+
+            monkeypatch.setenv(CONFIG_ENV_NAME, f"{self.config_path}")
+            shell("neuro config docker")
+
+            yield
+
+            docker_config.unlink()
+
 
 def ensure_config(
     token_env_name: str, uri_env_name: str, tmp_path_factory: Any
@@ -278,7 +305,7 @@ async def helper(
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
     print("URL", client._config.url)
-    yield Helper(client, tmp_path)
+    yield Helper(client, tmp_path, config_path)
     await client.close()
 
 
@@ -288,5 +315,26 @@ async def helper_alt(
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
     print("Alt URL", client._config.url)
-    yield Helper(client, tmp_path)
+    yield Helper(client, tmp_path, config_path_alt)
     await client.close()
+
+
+@pytest.fixture()
+def shell() -> Callable[..., str]:
+    def _shell(cmd: str, timeout: float = 600) -> str:
+        log.info(f"Run {cmd}")
+        result = run(cmd, shell=True, timeout=timeout, stdout=PIPE, stderr=PIPE)
+        if result.returncode != os.EX_OK:
+            raise SystemError(
+                f"Command `{cmd}` exits with code {result.returncode}, "
+                f"Stderr: {result.stderr.decode('utf-8')},"
+                f"Stdout: {result.stdout.decode('utf-8')}"
+            )
+        if result.stderr:
+            log.warning(
+                f"Command {cmd} write something to stderr: "
+                f"{result.stderr.decode('utf-8')}"
+            )
+        return result.stdout.decode("utf-8")
+
+    return _shell
