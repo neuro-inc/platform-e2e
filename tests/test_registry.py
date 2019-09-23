@@ -97,6 +97,7 @@ def test_user_can_pull_image(
 
 
 @pytest.mark.dependency(depends=["image_pushed"])
+@pytest.mark.timeout(330)
 async def test_registry_is_accesible_by_k8s(
     helper: Helper, remote_image: RemoteImage, tag: str
 ) -> None:

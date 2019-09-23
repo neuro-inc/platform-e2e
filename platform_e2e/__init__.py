@@ -321,7 +321,7 @@ async def helper_alt(
 
 @pytest.fixture()
 def shell() -> Callable[..., str]:
-    def _shell(cmd: str, timeout: float = 600) -> str:
+    def _shell(cmd: str, timeout: float = 300) -> str:
         log.info(f"Run {cmd}")
         result = run(cmd, shell=True, timeout=timeout, stdout=PIPE, stderr=PIPE)
         if result.returncode != os.EX_OK:
