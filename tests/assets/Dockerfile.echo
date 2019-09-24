@@ -1,0 +1,4 @@
+FROM alpine:latest
+ARG TAG=NotATag
+ENV TAG ${TAG}
+CMD echo $TAG

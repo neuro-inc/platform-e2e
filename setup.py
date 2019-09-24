@@ -1,7 +1,12 @@
 from setuptools import find_packages, setup
 
 
-install_requires = ("neuromation", "pytest")
+install_requires = (
+    "neuromation",
+    "pytest",
+    "aiodocker>=0.14",
+    "pytest-dependency>=0.4.0",
+)
 
 setup(
     name="platform-e2e",
