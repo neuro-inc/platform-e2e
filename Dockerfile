@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM fedora:30
 
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 

@@ -235,7 +235,7 @@ class Helper:
     ) -> Iterator[None]:
         with monkeypatch.context() as context:
             # docker support
-            context.setenv("DOCKER_CONFIG", self._tmp_path)
+            context.setenv("DOCKER_CONFIG", f"{self._tmp_path}")
 
             # podman support
             docker_config = self._tmp_path / "config.json"
