@@ -84,7 +84,7 @@ class Helper:
         name: Optional[str] = None,
         volumes: Optional[List[Volume]] = None,
         schedule_timeout: Optional[float] = None,
-        wait_timeout: int = 60,
+        wait_timeout: int = 180,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
