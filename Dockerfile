@@ -1,9 +1,9 @@
-FROM fedora:latest
+FROM fedora:31
 
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 
-RUN echo max_parallel_downloads=10\nfastestmirror=true>> /etc/dnf/dnf.conf && \
-    yum install -y --exclude container-selinux podman buildah python3 make gcc python3-devel && \
+RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
+    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
@@ -19,5 +19,5 @@ COPY . /platform-e2e
 WORKDIR /platform-e2e
 
 RUN make _docker-setup
-
+ENV BUILDAH_FORMAT=docker
 ENTRYPOINT ["/usr/bin/make"]

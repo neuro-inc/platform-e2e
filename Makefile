@@ -34,7 +34,6 @@ lint:
 	mypy $(SOURCES)
 
 _docker-setup:
-	pip install -r requirements.txt
 	pip install -e .
 
 docker-test:

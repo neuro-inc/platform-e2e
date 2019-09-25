@@ -48,10 +48,10 @@ jobs:
             make build
             docker tag platform-e2e:latest $ARTIFACTORY_DOCKER_REPO/platform-e2e:$CIRCLE_TAG
             docker tag platform-e2e:latest $ARTIFACTORY_DOCKER_REPO/platform-e2e:latest
-
+      # Privileged mode required only if docker-engine use aufs driver for storage
       - run:
           name: Test image
-          command: docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT platform-e2e:latest cluster-test
+          command: docker run --privileged -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT platform-e2e:latest cluster-test
       - artifactory/install
       - artifactory/configure:
           artifactory-key: ARTIFACTORY_PASSWORD

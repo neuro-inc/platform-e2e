@@ -20,6 +20,10 @@ def _generate_image(name: str, tag: str, shell: Callable[..., str]) -> str:
     dockerfile = Path(__file__).parent / "assets/Dockerfile.echo"
     image_name = f"{name}:{tag}"
     log.info(f"Build image {image_name}")
+    # build can be failed with error like  next:
+    #   error creating read-write layer with ID "xxx": operation not permitted
+    # if node has docker engine with aufs storage driver
+    # In this case platform-e2e image must be runned with --privileged switch
     shell(
         f"docker build -f {dockerfile} -t {image_name} --build-arg TAG={tag} "
         f"{dockerfile.parent}"
@@ -97,9 +101,13 @@ def test_user_can_pull_image(
 
 
 @pytest.mark.dependency(depends=["image_pushed"])
-@pytest.mark.timeout(330)
 async def test_registry_is_accesible_by_k8s(
     helper: Helper, remote_image: RemoteImage, tag: str
 ) -> None:
-    job = await helper.run_job(str(remote_image), wait_state=JobStatus.SUCCEEDED)
+    job = await helper.run_job(
+        str(remote_image),
+        wait_state=JobStatus.SUCCEEDED,
+        schedule_timeout=240,
+        wait_timeout=270,
+    )
     await helper.check_job_output(job.id, re.escape(tag))

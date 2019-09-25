@@ -84,6 +84,7 @@ class Helper:
         name: Optional[str] = None,
         volumes: Optional[List[Volume]] = None,
         schedule_timeout: Optional[float] = None,
+        wait_timeout: int = 60,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
@@ -115,12 +116,12 @@ class Helper:
             name=name,
             schedule_timeout=schedule_timeout,
         )
-        return await self._wait_job_state(job, wait_state)
+        return await self._wait_job_state(job, wait_state, wait_timeout)
 
     async def _wait_job_state(
-        self, job: JobDescription, wait_state: JobStatus
+        self, job: JobDescription, wait_state: JobStatus, timeout: int = 60
     ) -> JobDescription:
-        for i in range(60):
+        for i in range(timeout):
             log.info("Wait state %s: %s -> %s", wait_state, job.id, job.status)
             if job.status == wait_state:
                 break
@@ -234,7 +235,7 @@ class Helper:
     ) -> Iterator[None]:
         with monkeypatch.context() as context:
             # docker support
-            context.setenv("DOCKER_CONFIG", self._tmp_path)
+            context.setenv("DOCKER_CONFIG", f"{self._tmp_path}")
 
             # podman support
             docker_config = self._tmp_path / "config.json"
