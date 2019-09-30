@@ -84,7 +84,7 @@ class Helper:
         name: Optional[str] = None,
         volumes: Optional[List[Volume]] = None,
         schedule_timeout: Optional[float] = None,
-        wait_timeout: int = 60,
+        wait_timeout: int = 180,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
@@ -119,7 +119,7 @@ class Helper:
         return await self._wait_job_state(job, wait_state, wait_timeout)
 
     async def _wait_job_state(
-        self, job: JobDescription, wait_state: JobStatus, timeout: int = 60
+        self, job: JobDescription, wait_state: JobStatus, timeout: int = 180
     ) -> JobDescription:
         for i in range(timeout):
             log.info("Wait state %s: %s -> %s", wait_state, job.id, job.status)
