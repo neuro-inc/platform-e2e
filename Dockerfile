@@ -12,6 +12,12 @@ RUN rm -rf  /var/lib/containers/ && \
     ln -s /usr/bin/podman /usr/bin/docker
 
 
+# clusters created during CI process use letsencrypt staging environment
+# install letsencrypt staging environment certificate to trust store
+RUN curl -o /etc/pki/ca-trust/source/anchors/fakelerootx1.pem https://letsencrypt.org/certs/fakelerootx1.pem \
+    && update-ca-trust
+
+
 RUN python3 -m venv /venv
 ENV PATH=/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
