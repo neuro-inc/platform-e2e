@@ -1,4 +1,4 @@
-pytest==5.2.3
+pytest==5.2.4
 mypy==0.740
 black==19.10b0
 isort==4.3.21
