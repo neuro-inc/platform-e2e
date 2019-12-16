@@ -56,7 +56,7 @@ class Helper:
 
     @property
     def registry(self) -> URL:
-        return self._client._config.cluster_config.registry_url
+        return self._client.config.registry_url
 
     @property
     def username(self) -> str:
@@ -100,7 +100,7 @@ class Helper:
             volumes = []
         log.info("Submit job")
         remote_image = _ImageNameParser(
-            self.client.username, self.client._config.cluster_config.registry_url
+            self.client.username, self.client.config.registry_url
         ).parse_remote(image)
         container = Container(
             image=remote_image,
@@ -305,7 +305,7 @@ async def helper(
     config_path: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
-    print("URL", client._config.url)
+    print("API URL", client._config.api_url)
     yield Helper(client, tmp_path, config_path)
     await client.close()
 
@@ -315,7 +315,7 @@ async def helper_alt(
     config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
-    print("Alt URL", client._config.url)
+    print("Alt API URL", client._config.api_url)
     yield Helper(client, tmp_path, config_path_alt)
     await client.close()
 
