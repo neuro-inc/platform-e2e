@@ -3,9 +3,12 @@ IMAGE_TAG ?= latest
 IMAGE ?= $(GKE_DOCKER_REGISTRY)/$(GKE_PROJECT_ID)/$(IMAGE_NAME)
 CLUSTER_NAME ?= "default"
 SOURCES = setup.py platform_e2e tests
-
+TEST_OPTS = --durations 10 --timeout 300 --verbose
 DOCKER_CMD := docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI $(IMAGE_NAME):$(IMAGE_TAG)
 
+ifneq ($(SKIP_NETWORK_ISOLATION_TEST),)
+	TEST_OPTS := ${TEST_OPTS} -m "not network_isolation"
+endif
 
 build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
@@ -13,15 +16,15 @@ build:
 setup:
 	pip install -U pip
 	pip install -r requirements.txt
-	pip install -U -e git+git@github.com:neuromation/platform-client-python.git@master#egg=neuromation
+#	pip install -U -e git+git@github.com:neuromation/platform-client-python.git@master#egg=neuromation
 	pip install -e .
 	pip list|grep neuromation
 
 test:
-	pytest --durations 10 --timeout 300 --verbose tests
+	pytest ${TEST_OPTS} tests
 
 test-verbose:
-	pytest --durations 10 --timeout 300 --verbose --log-cli-level=INFO tests
+	pytest ${TEST_OPTS} --log-cli-level=INFO tests
 
 format:
 	black $(SOURCES)

@@ -116,6 +116,7 @@ async def test_connectivity_job_without_http_port(
     # internal network test
 
 
+@pytest.mark.network_isolation
 async def test_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
     http_job = await secret_job(True)
 
