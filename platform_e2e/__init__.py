@@ -315,7 +315,7 @@ async def helper_alt(
     config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
-    print("Alt API URL", client._config.api_url)
+    print("Alt API URL", client.config.api_url)
     yield Helper(client, tmp_path, config_path_alt)
     await client.close()
 
