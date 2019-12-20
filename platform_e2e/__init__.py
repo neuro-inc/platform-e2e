@@ -305,7 +305,7 @@ async def helper(
     config_path: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
 ) -> AsyncIterator[Helper]:
     client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
-    print("API URL", client._config.api_url)
+    print("API URL", client.config.api_url)
     yield Helper(client, tmp_path, config_path)
     await client.close()
 
