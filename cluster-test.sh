@@ -26,17 +26,31 @@ check_admin_token() {
 create_user() {
     local NAME=$1
     local ADMIN_TOKEN=$2
+
     info -n "Creating user: ${NAME} ..."
     curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      ${API_URL}/users -X POST \
-      -d '{"name":"'${NAME}'", "cluster_name": "'${CLUSTER_NAME}'"}'
+      "${ADMIN_API_URL}/users" -X POST \
+      -d '{"name":"'${NAME}'", "email": "'${NAME}@neu.ro'"}'
     if [[ $? -ne 0 ]]
     then
       info "Fail"
       die "Cannot create user: ${NAME}"
     fi
+
+    info -n "Assign cluster ${CLUSTER_NAME} to user: ${NAME} ..."
+    curl -sS --fail \
+      -H 'Accept: application/json' -H 'Content-Type: application/json' \
+      -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+      "${ADMIN_API_URL}/clusters/${CLUSTER_NAME}/users" -X POST \
+      -d '{"user_name":"'${NAME}'", "role": "user"}'
+    if [[ $? -ne 0 ]]
+    then
+      info "Fail"
+      die "Cannot assign cluster ${CLUSTER_NAME} to user: ${NAME}"
+    fi
+
     info "Ok"
 }
 
@@ -76,6 +90,8 @@ usage() {
 CLUSTER_NAME=default
 RUN_MODE=native
 API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
+APIS_URL=${API_URL/\/api\/v1/\/apis}
+ADMIN_API_URL=$APIS_URL/admin/v1
 
 while getopts c:d OPTION; do
   case "$OPTION" in
@@ -127,6 +143,7 @@ fi
 export CLIENT_TEST_E2E_USER_NAME
 export CLIENT_TEST_E2E_USER_NAME_ALT
 export CLIENT_TEST_E2E_URL
+
 if [ "$RUN_MODE" = "docker" ]
 then
   info "Run tests in docker image"
