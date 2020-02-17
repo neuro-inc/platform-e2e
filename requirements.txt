@@ -6,4 +6,4 @@ flake8==3.7.9
 pytest-aiohttp==0.3.0
 pytest-timeout==1.3.4
 aiohttp==3.6.2
-pytest-dependency==0.4.0
+pytest-dependency==0.5.1
