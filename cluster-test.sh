@@ -39,16 +39,31 @@ create_user() {
       die "Cannot create user: ${NAME}"
     fi
 
+    info "Ok"
+}
+
+add_user_to_cluster() {
+    local NAME=$1
+    local ADMIN_TOKEN=$2
+
+    mkdir -p "/tmp/neu.ro"
+    RESPONSE_FILE="$(mktemp "/tmp/neu.ro/response.XXXXXX")"
     info -n "Assign cluster ${CLUSTER_NAME} to user: ${NAME} ..."
-    curl -sS --fail \
+    HTTP_CODE="$(curl -s \
+      -o "$RESPONSE_FILE" \
+      -w "%{http_code}" \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
       "${ADMIN_API_URL}/clusters/${CLUSTER_NAME}/users" -X POST \
-      -d '{"user_name":"'${NAME}'", "role": "user"}'
-    if [[ $? -ne 0 ]]
-    then
-      info "Fail"
-      die "Cannot assign cluster ${CLUSTER_NAME} to user: ${NAME}"
+      -d '{"user_name":"'${NAME}'", "role": "user"}' \
+    )"
+
+    if [ "$HTTP_CODE" -ge "400" ]; then
+        RESPONSE="$(cat "$RESPONSE_FILE")"
+        if [ "$HTTP_CODE" != "400" ] || [[ "$RESPONSE" != *"already exists"* ]]; then
+            info "Fail"
+            die "Cannot assign cluster ${CLUSTER_NAME} to user: ${NAME}"
+        fi
     fi
 
     info "Ok"
@@ -120,6 +135,7 @@ then
         create_user $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
         CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
+    add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
   info "Using existing CLIENT_TEST_E2E_USER_NAME"
 fi
@@ -136,6 +152,7 @@ then
         create_user $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
         CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
+    add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
   info "Using existing CLIENT_TEST_E2E_USER_NAME_ALT"
 fi
