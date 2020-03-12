@@ -2,9 +2,9 @@ import asyncio
 from pathlib import Path
 from uuid import uuid4
 
-from neuromation.api import JobStatus, Resources, Volume
 from yarl import URL
 
+from neuromation.api import JobStatus, Resources, Volume
 from platform_e2e import Helper
 
 
@@ -146,7 +146,7 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
     name_0 = None
     command = "sleep 10m"
     for i in range(N_JOBS):
-        name = f"job-{uuid4().hex[:5]}"
+        name = f"test-job-{uuid4().hex[:5]}"
         if not name_0:
             name_0 = name
         job = await helper.run_job(
