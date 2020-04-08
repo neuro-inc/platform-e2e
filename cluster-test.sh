@@ -88,7 +88,7 @@ user_token() {
       fi
     else
       info "Ok"
-      echo -n $(echo $USER_TOKEN_PAYLOAD | grep -Po '(?<="access_token": ")[^"]+')
+      echo -n $(echo $USER_TOKEN_PAYLOAD | jq -r .access_token)
     fi
 }
 
