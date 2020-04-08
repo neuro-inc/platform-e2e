@@ -55,7 +55,11 @@ def generated_image_name(
 @pytest.fixture()
 def remote_image(name: str, tag: str, helper: Helper) -> RemoteImage:
     return RemoteImage(
-        name=name, tag=tag, registry=helper.registry.host, owner=helper.username
+        name=name,
+        tag=tag,
+        registry=helper.registry.host,
+        owner=helper.username,
+        cluster_name=helper.cluster_name,
     )
 
 

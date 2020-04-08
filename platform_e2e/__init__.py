@@ -41,8 +41,10 @@ class Helper:
         self._client = client
         self._tmp_path = tmp_path
         self._config_path = config_path
-        self._tmpstorage = URL(
-            "storage://" + client.username + "/" + str(uuid4()) + "/"
+        self._tmpstorage = URL.build(
+            scheme="storage",
+            host=client.cluster_name,
+            path=f"/{client.username}/{str(uuid4())}/",
         )
         self._has_root_storage = False
 
@@ -61,6 +63,10 @@ class Helper:
     @property
     def username(self) -> str:
         return self._client.username
+
+    @property
+    def cluster_name(self) -> str:
+        return self._client.cluster_name
 
     @property
     def config_path(self) -> Path:
@@ -100,7 +106,9 @@ class Helper:
             volumes = []
         log.info("Submit job")
         remote_image = _ImageNameParser(
-            self.client.username, self.client.config.registry_url
+            self.client.username,
+            default_cluster=self.cluster_name,
+            registry_url=self.client.config.registry_url,
         ).parse_remote(image)
         container = Container(
             image=remote_image,
