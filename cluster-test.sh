@@ -65,6 +65,34 @@ add_user_to_cluster() {
             die "Cannot assign cluster ${CLUSTER_NAME} to user: ${NAME}"
         fi
     fi
+    info "Ok"
+}
+
+
+assign_blob_access() {
+    local NAME=$1
+    local ADMIN_TOKEN=$2
+
+    mkdir -p "/tmp/neu.ro"
+    RESPONSE_FILE="$(mktemp "/tmp/neu.ro/response.XXXXXX")"
+
+    local BUCKET_NAME="neuro-test-e2e-${NAME}"
+    info -n "Give access for user: ${NAME} to bucket: ${BUCKET_NAME} ..."
+    HTTP_CODE="$(curl -s \
+      -o "$RESPONSE_FILE" \
+      -w "%{http_code}" \
+      -H 'Accept: application/json' -H 'Content-Type: application/json' \
+      -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+      "${API_URL}/users/${USER_NAME}/permissions" -X POST \
+      -d "[{\"uri\": \"blob://${CLUSTER_NAME}\", \"action\": \"write\"}]" \
+    )"
+    if [ "$HTTP_CODE" -ge "400" ]; then
+        RESPONSE="$(cat "$RESPONSE_FILE")"
+        if [ "$HTTP_CODE" != "400" ]; then
+            info "Fail"
+            die "Cannot give access for bucket ${BUCKET_NAME} to user: ${NAME}"
+        fi
+    fi
 
     info "Ok"
 }
@@ -136,6 +164,7 @@ then
         CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
     add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
+    assign_blob_access $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
   info "Using existing CLIENT_TEST_E2E_USER_NAME"
 fi
