@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 install_requires = (
-    "neuromation==20.2.24",
+    "neuromation>=20.4.6",
     "pytest",
     "pytest-dependency>=0.4.0",
     "pytest-timeout>=1.3.3",
