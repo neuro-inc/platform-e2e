@@ -209,7 +209,9 @@ class Helper:
 
     async def mkdir(self, path: str) -> None:
         await self.ensure_root_storage()
-        await self._client.storage.mkdir(self.tmpstorage / path)
+        await self._client.storage.mkdir(
+            self.tmpstorage / path, parents=True, exist_ok=True
+        )
 
     async def rm(self, path: str) -> None:
         await self._client.storage.rm(self.tmpstorage / path)
@@ -236,13 +238,7 @@ class Helper:
         await self._client.storage.download_file(
             self.tmpstorage / path, URL(tmp_file.as_uri())
         )
-        hasher = hashlib.sha1()
-        with tmp_file.open("rb") as file:
-            chunk = file.read(1024 * 1024)
-            while chunk:
-                hasher.update(chunk)
-                chunk = file.read(1024 * 1024)
-        return hasher.hexdigest()
+        return await self.calc_local_checksum(tmp_file)
 
     async def calc_local_checksum(self, path: Path) -> str:
         hasher = hashlib.sha1()
