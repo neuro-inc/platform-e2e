@@ -3,7 +3,7 @@ FROM fedora:31
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel && \
+    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel jq && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
