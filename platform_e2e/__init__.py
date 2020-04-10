@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 import re
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run
@@ -26,6 +27,12 @@ from neuromation.api import (
 )
 from neuromation.api.parsing_utils import _ImageNameParser
 from yarl import URL
+
+
+if sys.version_info >= (3, 7):  # pragma: no cover
+    from contextlib import asynccontextmanager  # noqa
+else:
+    from async_generator import asynccontextmanager  # noqa
 
 
 NETWORK_TIMEOUT = 60.0 * 3
@@ -202,7 +209,9 @@ class Helper:
 
     async def mkdir(self, path: str) -> None:
         await self.ensure_root_storage()
-        await self._client.storage.mkdir(self.tmpstorage / path)
+        await self._client.storage.mkdir(
+            self.tmpstorage / path, parents=True, exist_ok=True
+        )
 
     async def rm(self, path: str) -> None:
         await self._client.storage.rm(self.tmpstorage / path)
@@ -229,8 +238,11 @@ class Helper:
         await self._client.storage.download_file(
             self.tmpstorage / path, URL(tmp_file.as_uri())
         )
+        return await self.calc_local_checksum(tmp_file)
+
+    async def calc_local_checksum(self, path: Path) -> str:
         hasher = hashlib.sha1()
-        with tmp_file.open("rb") as file:
+        with path.open("rb") as file:
             chunk = file.read(1024 * 1024)
             while chunk:
                 hasher.update(chunk)
@@ -255,6 +267,28 @@ class Helper:
             yield
 
             docker_config.unlink()
+
+    @asynccontextmanager
+    async def create_tmp_bucket(self) -> AsyncIterator[str]:
+        blob_storage = self.client.blob_storage
+        name = "neuro-test-e2e-" + self.username
+        available = [x.name for x in await blob_storage.list_buckets()]
+        if name not in available:
+            await blob_storage.create_bucket(name)
+        yield name
+        await self.cleanup_bucket(name)
+        await blob_storage.delete_bucket(name)
+
+    async def cleanup_bucket(self, bucket_name: str) -> None:
+        blobs, _ = await self.client.blob_storage.list_blobs(
+            bucket_name, recursive=True
+        )
+        if not blobs:
+            return
+
+        for blob in blobs:
+            log.info("Removing %s %s", bucket_name, blob.key)
+            await self.client.blob_storage.delete_blob(bucket_name, key=blob.key)
 
 
 def ensure_config(
