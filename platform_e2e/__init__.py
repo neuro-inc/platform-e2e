@@ -153,7 +153,7 @@ class Helper:
             await asyncio.sleep(1)
             job = await self.client.jobs.status(job.id)
         else:
-            raise AssertionError("Cannot start job to {wait_state}: {job.status}")
+            raise AssertionError(f"Cannot start job to {wait_state}: {job.status}")
         return job
 
     async def wait_job_state(

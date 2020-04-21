@@ -1,9 +1,13 @@
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
 from yarl import URL
 
 from platform_e2e import Helper
+
+
+pytestmark = pytest.mark.blob_storage
 
 
 async def test_blob_storage_interaction(helper: Helper, tmp_path: Path) -> None:
