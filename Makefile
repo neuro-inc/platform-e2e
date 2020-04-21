@@ -6,8 +6,15 @@ SOURCES = setup.py platform_e2e tests
 TEST_OPTS = --durations 10 --timeout 300 --verbose
 DOCKER_CMD := docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI $(IMAGE_NAME):$(IMAGE_TAG)
 
-ifneq ($(SKIP_NETWORK_ISOLATION_TEST),)
-	TEST_OPTS := ${TEST_OPTS} -m "not network_isolation"
+ifdef SKIP_NETWORK_ISOLATION_TEST
+	TEST_MARKERS := not network_isolation $(TEST_MARKERS)
+endif
+
+ifdef SKIP_BLOB_STORAGE_TESTS
+ifneq ($(TEST_MARKERS),)
+	TEST_MARKERS := and $(TEST_MARKERS)
+endif
+	TEST_MARKERS := not blob_storage $(TEST_MARKERS)
 endif
 
 build:
@@ -21,10 +28,10 @@ setup:
 	pip list|grep neuromation
 
 test:
-	pytest ${TEST_OPTS} tests
+	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" tests
 
 test-verbose:
-	pytest ${TEST_OPTS} --log-cli-level=INFO tests
+	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
 	black $(SOURCES)
