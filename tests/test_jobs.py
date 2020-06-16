@@ -2,9 +2,9 @@ import asyncio
 from pathlib import Path
 from uuid import uuid4
 
-from neuromation.api import JobStatus, Resources, Volume
 from yarl import URL
 
+from neuromation.api import JobStatus, Resources, Volume
 from platform_e2e import Helper
 
 
@@ -263,5 +263,5 @@ async def test_job_logs(helper: Helper) -> None:
     await helper.client.jobs.kill(job.id)
     await asyncio.sleep(10)  # Give time kubernetes to delete pod
 
-    # Pod doesn't exists, check logs saved to logs storage
+    # Pod doesn't exist, check logs saved to logs storage
     await helper.check_job_output(job.id, expected_output)
