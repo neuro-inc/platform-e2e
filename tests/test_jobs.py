@@ -238,3 +238,30 @@ async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
 
     # Download into local dir and confirm checksum
     assert checksum == await helper.calc_storage_checksum("result/foo")
+
+
+async def test_job_logs(helper: Helper) -> None:
+    # Start long running job
+    n = 5
+    # If we trap the signal and exit manually pod will terminate instantly
+    cmd = (
+        "bash -c "
+        '"'
+        "trap 'exit 0' SIGTERM;"
+        f"for i in {{1..{n}}}; do echo $i; sleep 1; done;"
+        "sleep 3600 & wait $!"
+        '"'
+    )
+    expected_output = "\n".join(str(i) for i in range(1, n + 1)) + "\n"
+
+    job = await helper.run_job("ubuntu:latest", cmd, wait_state=JobStatus.RUNNING)
+
+    # Pod exists, check logs from pod
+    await helper.check_job_output(job.id, expected_output)
+
+    # If running job is killed it's pod will be deleted
+    await helper.client.jobs.kill(job.id)
+    await asyncio.sleep(10)  # Give time kubernetes to delete pod
+
+    # Pod doesn't exist, check logs saved to logs storage
+    await helper.check_job_output(job.id, expected_output)
