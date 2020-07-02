@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout commit
         uses: actions/checkout@v2
+      - uses: fregante/setup-git-token@v1
+        with:
+          token: ${{ secrets.GHI_TOKEN }}
       - name: Install python
         uses: actions/setup-python@v2
         with:
