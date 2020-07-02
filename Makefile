@@ -33,13 +33,12 @@ test-verbose:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
-	black $(SOURCES)
 	isort -rc $(SOURCES)
+	black .
 
 lint:
-	flake8 $(SOURCES)
 	black --check $(SOURCES)
-	isort --check -rc $(SOURCES)
+	flake8 $(SOURCES)
 	mypy $(SOURCES)
 
 _docker-setup:
