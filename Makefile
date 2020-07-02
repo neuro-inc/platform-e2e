@@ -1,6 +1,5 @@
 IMAGE_NAME ?= platform-e2e
 IMAGE_TAG ?= latest
-IMAGE ?= $(GKE_DOCKER_REGISTRY)/$(GKE_PROJECT_ID)/$(IMAGE_NAME)
 CLUSTER_NAME ?= "default"
 SOURCES = setup.py platform_e2e tests
 TEST_OPTS = --durations 10 --timeout 300 --verbose
@@ -23,7 +22,7 @@ build:
 setup:
 	pip install -U pip
 	pip install -r requirements.txt
-	pip install -U -e git+git@github.com:neuromation/platform-client-python.git@master#egg=neuromation
+	pip install -U -e git+https://github.com/neuromation/platform-client-python.git@master#egg=neuromation
 	pip install -e .
 	pip list|grep neuromation
 
@@ -34,13 +33,12 @@ test-verbose:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
-	black $(SOURCES)
 	isort -rc $(SOURCES)
+	black .
 
 lint:
-	flake8 $(SOURCES)
 	black --check $(SOURCES)
-	isort --check -rc $(SOURCES)
+	flake8 $(SOURCES)
 	mypy $(SOURCES)
 
 _docker-setup:
