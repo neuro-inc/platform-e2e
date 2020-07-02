@@ -1,6 +1,5 @@
 IMAGE_NAME ?= platform-e2e
 IMAGE_TAG ?= latest
-IMAGE ?= $(GKE_DOCKER_REGISTRY)/$(GKE_PROJECT_ID)/$(IMAGE_NAME)
 CLUSTER_NAME ?= "default"
 SOURCES = setup.py platform_e2e tests
 TEST_OPTS = --durations 10 --timeout 300 --verbose
