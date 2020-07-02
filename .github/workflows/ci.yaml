@@ -35,9 +35,10 @@ jobs:
         run: make setup
       - name: Lint
         run: make lint
+      - name: Build image
+        run: make build
       - name: Run tests
         run: |
-          make build
           # Privileged mode is required only if docker-engine use aufs driver for storage
           docker run --privileged -t \
             -e CLIENT_TEST_E2E_USER_NAME \
