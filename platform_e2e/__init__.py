@@ -164,7 +164,7 @@ class Helper:
 
     async def http_get(self, url: URL) -> str:
         """
-            Try to fetch given url few times.
+        Try to fetch given url few times.
         """
         async with aiohttp.ClientSession() as session:
             for i in range(3):
@@ -185,7 +185,7 @@ class Helper:
         self, job_id: str, expected: str, *, re_flags: int = 0
     ) -> None:
         """
-            Wait until job output satisfies given regexp
+        Wait until job output satisfies given regexp
         """
         loop = asyncio.get_event_loop()
 
