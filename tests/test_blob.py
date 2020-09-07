@@ -22,7 +22,7 @@ async def test_blob_storage_interaction(helper: Helper, tmp_path: Path) -> None:
         )
 
         await helper.client.blob_storage.download_file(
-            URL(f"blob:{bucket_name}/data/foo"), URL(dst_file.as_uri()),
+            URL(f"blob:{bucket_name}/data/foo"), URL(dst_file.as_uri())
         )
 
     # confirm checksum
