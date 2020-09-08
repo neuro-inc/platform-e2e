@@ -90,8 +90,8 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     # Currently we check that the job is not running anymore
     # TODO(adavydow): replace to succeeded check when racecon in
     # platform-api fixed.
-    await helper.wait_job_state(first_job.id, JobStatus.SUCCEEDED)
-    await helper.wait_job_state(second_job.id, JobStatus.SUCCEEDED)
+    await helper.wait_job_state(first_job.id, JobStatus.CANCELLED)
+    await helper.wait_job_state(second_job.id, JobStatus.CANCELLED)
 
     # Check that it is not in a running job list anymore
     jobs = [
