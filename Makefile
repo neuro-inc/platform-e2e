@@ -33,10 +33,11 @@ test-verbose:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
-	isort -rc $(SOURCES)
-	black .
+	isort $(SOURCES)
+	black $(SOURCES)
 
 lint:
+	isort --check-only --diff $(SOURCES)
 	black --check $(SOURCES)
 	flake8 $(SOURCES)
 	mypy $(SOURCES)

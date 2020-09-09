@@ -12,6 +12,8 @@ from uuid import uuid4
 
 import aiohttp
 import pytest
+from yarl import URL
+
 from neuromation.api import (
     CONFIG_ENV_NAME,
     DEFAULT_CONFIG_PATH,
@@ -26,7 +28,6 @@ from neuromation.api import (
     login_with_token,
 )
 from neuromation.api.parsing_utils import _ImageNameParser
-from yarl import URL
 
 
 if sys.version_info >= (3, 7):  # pragma: no cover

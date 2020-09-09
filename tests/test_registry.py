@@ -5,8 +5,8 @@ from typing import Any, Callable, Iterator
 from uuid import uuid4 as uuid
 
 import pytest
-from neuromation.api import JobStatus, RemoteImage
 
+from neuromation.api import JobStatus, RemoteImage
 from platform_e2e import Helper
 
 
