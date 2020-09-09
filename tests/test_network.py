@@ -3,8 +3,8 @@ from typing import Any
 
 import aiohttp
 import pytest
-from neuromation.api import JobStatus, Resources
 
+from neuromation.api import JobStatus, Resources
 from platform_e2e import Helper
 
 

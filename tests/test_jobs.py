@@ -2,9 +2,9 @@ import asyncio
 from pathlib import Path
 from uuid import uuid4
 
-from neuromation.api import JobStatus, Resources, Volume
 from yarl import URL
 
+from neuromation.api import JobStatus, Resources, Volume
 from platform_e2e import Helper
 
 
