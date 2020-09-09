@@ -60,7 +60,7 @@ jobs:
         run: echo ::set-env name=TAG::${GITHUB_REF#refs/tags/}
       - name: Push image
         run: |
-          docker login $DOCKER_REPO --username=$(DOCKER_USERNAME) --password=$(DOCKER_PASSWORD)
+          docker login $DOCKER_REPO --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
           make build
           docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:$TAG
           docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:latest
