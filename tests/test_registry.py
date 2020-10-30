@@ -96,12 +96,28 @@ def test_user_can_push_image(
         shell(f"docker push {generated_image_with_repo}")
 
 
-@pytest.mark.dependency(depends=["image_pushed"])
+@pytest.mark.dependency(depends=["image_pushed"], name="image_pulled")
 def test_user_can_pull_image(
     image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
 ) -> None:
     with helper.docker_context(monkeypatch, shell):
         shell(f"docker pull {image_with_repo}")
+
+
+# dependency is required to ensure pull-delete ordering
+@pytest.mark.dependency(depends=["image_pulled"])
+def test_user_can_delete_image(
+    image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
+) -> None:
+    shell(f"neuro image rm {image_with_repo}")
+    with helper.docker_context(monkeypatch, shell):
+        with pytest.raises(Exception) as e:
+            shell(f"docker pull {image_with_repo}")
+    error_message = (
+        f"Error response from daemon: manifest for "
+        f"{image_with_repo} not found: manifest unknown: manifest unknown"
+    )
+    assert error_message == str(e.value)
 
 
 @pytest.mark.dependency(depends=["image_pushed"])
