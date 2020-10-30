@@ -23,7 +23,7 @@ For `docker` mode only docker  and latest `platform-e2e` image required.
 
 ### Optional ENV vars
 
-* CLIENT_TEST_E2E_URI,  API endpoint, default `https://dev.neu.ro/api/v1` 
+* CLIENT_TEST_E2E_URI,  API endpoint, default `https://dev.neu.ro/api/v1`
 
 ### Run Test with existing users mode
 

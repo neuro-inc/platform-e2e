@@ -25,6 +25,7 @@ setup:
 	pip install -U -e git+https://github.com/neuromation/platform-client-python.git@master#egg=neuromation
 	pip install -e .
 	pip list|grep neuromation
+	pre-commit install
 
 test:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" tests
@@ -33,13 +34,9 @@ test-verbose:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
-	isort $(SOURCES)
-	black $(SOURCES)
+	pre-commit run --all-files --show-diff-on-failure
 
-lint:
-	isort --check-only --diff $(SOURCES)
-	black --check $(SOURCES)
-	flake8 $(SOURCES)
+lint: format
 	mypy $(SOURCES)
 
 _docker-setup:

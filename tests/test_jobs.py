@@ -122,13 +122,13 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
 
     # test no status filters (same as pending+running)
     ret = [job async for job in helper.client.jobs.list()]
-    jobs_ls_no_arg = set(j.id for j in ret)
+    jobs_ls_no_arg = {j.id for j in ret}
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_no_arg >= jobs
 
     # test single status filter
     ret = [job async for job in helper.client.jobs.list(statuses={JobStatus.RUNNING})]
-    jobs_ls_running = set(j.id for j in ret)
+    jobs_ls_running = {j.id for j in ret}
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_running >= jobs
 
@@ -139,7 +139,7 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
             statuses={JobStatus.RUNNING, JobStatus.FAILED}
         )
     ]
-    jobs_ls_running = set(j.id for j in ret)
+    jobs_ls_running = {j.id for j in ret}
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_running >= jobs
 
@@ -155,7 +155,7 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
             }
         )
     ]
-    jobs_ls_all_explicit = set(j.id for j in ret)
+    jobs_ls_all_explicit = {j.id for j in ret}
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_all_explicit >= jobs
 
@@ -181,7 +181,7 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
 
     # test filtering by name only
     ret = [job async for job in helper.client.jobs.list(name=name_0)]
-    jobs_ls = set(j.id for j in ret)
+    jobs_ls = {j.id for j in ret}
     assert jobs_ls == {jobs_name_map[name_0]}
 
     # test filtering by name and single status
@@ -191,7 +191,7 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
             statuses={JobStatus.RUNNING}, name=name_0
         )
     ]
-    jobs_ls = set(j.id for j in ret)
+    jobs_ls = {j.id for j in ret}
     assert jobs_ls == {jobs_name_map[name_0]}
 
     # test filtering by name and 2 statuses - no jobs found
