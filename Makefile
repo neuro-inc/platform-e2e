@@ -34,7 +34,12 @@ test-verbose:
 	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
+ifdef CI_LINT_RUN
 	pre-commit run --all-files --show-diff-on-failure
+else
+	pre-commit run --all-files
+endif
+
 
 lint: format
 	mypy $(SOURCES)
