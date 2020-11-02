@@ -5,9 +5,9 @@ on:
   release:
     types: [published]
     tags:
-      - v*
+    - v*
   schedule:
-    - cron: "0 0 * * *"
+  - cron: 0 0 * * *
 
 jobs:
   test:
@@ -17,33 +17,35 @@ jobs:
       CLIENT_TEST_E2E_USER_NAME: ${{ secrets.CLIENT_TEST_E2E_USER_NAME }}
       CLIENT_TEST_E2E_USER_NAME_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_NAME_ALT }}
     steps:
-      - name: Checkout commit
-        uses: actions/checkout@v2
-      - uses: fregante/setup-git-token@v1
-        with:
-          token: ${{ secrets.GHI_TOKEN }}
-      - name: Install python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.7.7"
-      - name: Cache packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-py-3.7.7-${{ hashFiles('requirements.txt') }} }}
-      - name: Install dependencies
-        run: make setup
-      - name: Lint
-        run: make lint
-      - name: Build image
-        run: make build
-      - name: Run tests
-        run: |
-          # Privileged mode is required only if docker-engine use aufs driver for storage
-          docker run --privileged -t \
-            -e CLIENT_TEST_E2E_USER_NAME \
-            -e CLIENT_TEST_E2E_USER_NAME_ALT \
-            platform-e2e:latest cluster-test
+    - name: Checkout commit
+      uses: actions/checkout@v2
+    - uses: fregante/setup-git-token@v1
+      with:
+        token: ${{ secrets.GHI_TOKEN }}
+    - name: Install python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.7
+    - name: Cache packages
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-py-3.7.7-${{ hashFiles('requirements.txt') }} }}
+    - name: Install dependencies
+      run: make setup
+    - name: Lint
+      run: make lint
+      env:
+        CI_LINT_RUN: 1
+    - name: Build image
+      run: make build
+    - name: Run tests
+      run: |
+        # Privileged mode is required only if docker-engine use aufs driver for storage
+        docker run --privileged -t \
+          -e CLIENT_TEST_E2E_USER_NAME \
+          -e CLIENT_TEST_E2E_USER_NAME_ALT \
+          platform-e2e:latest cluster-test
   release:
     name: Release package
     runs-on: ubuntu-latest
@@ -54,15 +56,15 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
     steps:
-      - name: Checkout commit
-        uses: actions/checkout@v2
-      - name: Set env
-        run: echo ::set-env name=TAG::${GITHUB_REF#refs/tags/}
-      - name: Push image
-        run: |
-          docker login $DOCKER_REPO --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
-          make build
-          docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:$TAG
-          docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:latest
-          docker push $DOCKER_REPO/platform-e2e:$TAG
-          docker push $DOCKER_REPO/platform-e2e:latest
+    - name: Checkout commit
+      uses: actions/checkout@v2
+    - name: Set env
+      run: echo ::set-env name=TAG::${GITHUB_REF#refs/tags/}
+    - name: Push image
+      run: |
+        docker login $DOCKER_REPO --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
+        make build
+        docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:$TAG
+        docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:latest
+        docker push $DOCKER_REPO/platform-e2e:$TAG
+        docker push $DOCKER_REPO/platform-e2e:latest
