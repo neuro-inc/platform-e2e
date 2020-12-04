@@ -49,7 +49,6 @@ def generated_image_name(
     yield image_name
     log.info(f"Remove image {image_name}")
     shell(f"docker rmi {image_name}")
-    pass
 
 
 @pytest.fixture()
@@ -115,3 +114,13 @@ async def test_registry_is_accesible_by_k8s(
         wait_timeout=270,
     )
     await helper.check_job_output(job.id, re.escape(tag))
+
+
+def test_long_tags_list(
+    image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
+) -> None:
+    for i in range(500):
+        random_tag = uuid()
+        shell(f"neuro image push {image_with_repo}{random_tag}")
+    output = shell(f"neuro image tags {image_with_repo}")
+    assert len(output.splitlines()) == 500
