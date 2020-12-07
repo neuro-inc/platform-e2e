@@ -117,12 +117,23 @@ async def test_registry_is_accesible_by_k8s(
 
 
 def test_long_tags_list(
-    image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
+    image_with_repo: str,
+    remote_image: RemoteImage,
+    shell: Callable[..., str],
+    helper: Helper,
+    monkeypatch: Any,
 ) -> None:
-    DEFAULT_OUTPUT_LINES = 5
-    TAG_COUNT = 500
-    for i in range(TAG_COUNT):
+    default_output_lines = 5
+    tag_count = 500
+
+    for i in range(tag_count):
         random_tag = uuid()
-        shell(f"neuro image push {image_with_repo}{random_tag}")
+        image_with_repo = (
+            f"{remote_image.registry}/"
+            f"{remote_image.owner}/"
+            f"{remote_image.name}:{random_tag}"
+        )
+        shell(f"neuro image push {generated_image_with_repo} {image_with_repo}")
+
     output = shell(f"neuro image tags {image_with_repo}")
-    assert len(output.splitlines()) == TAG_COUNT + DEFAULT_OUTPUT_LINES
+    assert len(output.splitlines()) == tag_count + default_output_lines
