@@ -117,7 +117,7 @@ async def test_registry_is_accesible_by_k8s(
 
 
 def test_long_tags_list(
-    generated_image_with_repo: str,
+    generated_image_name: str,
     remote_image: RemoteImage,
     shell: Callable[..., str],
     helper: Helper,
@@ -133,7 +133,7 @@ def test_long_tags_list(
             f"{remote_image.owner}/"
             f"{remote_image.name}:{random_tag}"
         )
-        shell(f"neuro image push {generated_image_with_repo} {image_with_repo}")
+        shell(f"neuro image push {generated_image_name} {image_with_repo}")
 
     output = shell(f"neuro image tags {image_with_repo}")
     assert len(output.splitlines()) == tag_count + default_output_lines
