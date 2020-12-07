@@ -49,7 +49,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     assert job.history.reason == "Job will not fit into cluster"
     assert (
         job.history.description
-        == "Failed to scale up the cluster to get more resources"
+        == "The job could not be started."
     )
     # Check that it is not in a running job list anymore
     jobs = [
