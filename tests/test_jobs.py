@@ -46,7 +46,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     else:
         raise AssertionError(f"Timeout {job.id}: {job.status}")
 
-    assert job.history.reason == "ClusterScaleUpFailed"
+    assert job.history.reason == "Job will not fit into cluster"
     assert (
         job.history.description
         == "Failed to scale up the cluster to get more resources"
