@@ -119,8 +119,10 @@ async def test_registry_is_accesible_by_k8s(
 def test_long_tags_list(
     image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
 ) -> None:
-    for i in range(500):
+    DEFAULT_OUTPUT_LINES = 5
+    TAG_COUNT = 500
+    for i in range(TAG_COUNT):
         random_tag = uuid()
         shell(f"neuro image push {image_with_repo}{random_tag}")
     output = shell(f"neuro image tags {image_with_repo}")
-    assert len(output.splitlines()) == 500
+    assert len(output.splitlines()) == TAG_COUNT + DEFAULT_OUTPUT_LINES
