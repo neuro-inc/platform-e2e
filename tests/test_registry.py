@@ -116,7 +116,7 @@ async def test_registry_is_accesible_by_k8s(
     await helper.check_job_output(job.id, re.escape(tag))
 
 
-def test_long_tags_list(
+async def test_long_tags_list(
     generated_image_name: str,
     remote_image: RemoteImage,
     shell: Callable[..., str],
@@ -125,6 +125,8 @@ def test_long_tags_list(
 ) -> None:
     default_output_lines = 5
     tag_count = 500
+    token = await helper.client.config.token()
+    shell(f"neuro config login-with-token {token}")
 
     for i in range(tag_count):
         random_tag = uuid()
