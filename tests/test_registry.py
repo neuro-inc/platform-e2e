@@ -1,5 +1,6 @@
 import logging
 import re
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from uuid import uuid4 as uuid
@@ -123,19 +124,24 @@ async def test_long_tags_list(
     helper: Helper,
     monkeypatch: Any,
 ) -> None:
-    default_output_lines = 5
+    # default_output_lines = 5
     tag_count = 500
-    token = await helper.client.config.token()
-    shell(f"neuro config login-with-token {token}")
+    local_image = helper.client.parse.local_image(generated_image_name)
 
     for i in range(tag_count):
-        random_tag = uuid()
-        image_with_repo = (
-            f"{remote_image.registry}/"
-            f"{remote_image.owner}/"
-            f"{remote_image.name}:{random_tag}"
+        await helper.client.images.push(
+            local_image, replace(remote_image, tag=str(uuid()))
         )
-        shell(f"neuro image push {generated_image_name} {image_with_repo}")
+        # shell(f"neuro image push {generated_image_name} {image_with_repo}")
 
-    output = shell(f"neuro image tags {image_with_repo}")
-    assert len(output.splitlines()) == tag_count + default_output_lines
+    tags = await helper.client.images.tags(
+        RemoteImage.new_neuro_image(
+            name=remote_image.name,
+            registry=str(remote_image.registry),
+            owner=str(remote_image.owner),
+            cluster_name=str(remote_image.cluster_name),
+        )
+    )
+    # output = shell(f"neuro image tags {image_with_repo}")
+    # assert len(output.splitlines()) == tag_count + default_output_lines
+    assert len(tags) == tag_count
