@@ -117,7 +117,7 @@ async def test_registry_is_accesible_by_k8s(
 
 
 def test_long_tags_list(
-    image_with_repo: str,
+    generated_image_with_repo: str,
     remote_image: RemoteImage,
     shell: Callable[..., str],
     helper: Helper,
