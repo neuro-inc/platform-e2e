@@ -127,7 +127,8 @@ async def test_long_tags_list(
     default_output_lines = 5
     tag_count = 500
     token = os.environ["CLIENT_TEST_E2E_USER_NAME"]
-    shell(f"neuro --show-traceback config login-with-token {token}")
+    api_url = str(helper.client.config.api_url)
+    shell(f"neuro --show-traceback config login-with-token {token} {api_url}")
     shell("neuro config docker")
 
     for i in range(tag_count):
