@@ -1,6 +1,6 @@
 import logging
+import os
 import re
-from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from uuid import uuid4 as uuid
@@ -124,25 +124,12 @@ async def test_long_tags_list(
     helper: Helper,
     monkeypatch: Any,
 ) -> None:
-    # default_output_lines = 5
+    default_output_lines = 5
     tag_count = 500
-    local_image = helper.client.parse.local_image(generated_image_name)
+    token = os.environ["CLIENT_TEST_E2E_ADMIN_TOKEN"]
+    shell(f"neuro config login-with-token {token}")
 
-    with helper.docker_context(monkeypatch, shell):
-        for i in range(tag_count):
-            await helper.client.images.push(
-                local_image, replace(remote_image, tag=str(uuid()))
-            )
-            # shell(f"neuro image push {generated_image_name} {image_with_repo}")
-
-        tags = await helper.client.images.tags(
-            RemoteImage.new_neuro_image(
-                name=remote_image.name,
-                registry=str(remote_image.registry),
-                owner=str(remote_image.owner),
-                cluster_name=str(remote_image.cluster_name),
-            )
-        )
-    # output = shell(f"neuro image tags {image_with_repo}")
-    # assert len(output.splitlines()) == tag_count + default_output_lines
-    assert len(tags) == tag_count
+    for i in range(tag_count):
+        shell(f"neuro image push {generated_image_name} {image_with_repo}")
+    output = shell(f"neuro image tags {image_with_repo}")
+    assert len(output.splitlines()) == tag_count + default_output_lines
