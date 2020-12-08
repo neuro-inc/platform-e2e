@@ -126,7 +126,7 @@ async def test_long_tags_list(
 ) -> None:
     default_output_lines = 5
     tag_count = 500
-    token = os.environ["CLIENT_TEST_E2E_ADMIN_TOKEN"]
+    token = os.environ["CLIENT_TEST_E2E_USER_NAME"]
     shell(f"neuro config login-with-token {token}")
 
     for i in range(tag_count):
