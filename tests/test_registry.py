@@ -128,10 +128,16 @@ async def test_long_tags_list(
     tag_count = 500
     token = os.environ["CLIENT_TEST_E2E_USER_NAME"]
     api_url = str(helper.client.config.api_url)
-    shell(f"neuro --show-traceback config login-with-token {token} {api_url}")
+    shell(f"neuro config login-with-token {token} {api_url}")
     shell("neuro config docker")
 
     for i in range(tag_count):
+        random_tag = uuid()
+        image_with_repo = (
+            f"{remote_image.registry}/"
+            f"{remote_image.owner}/"
+            f"{remote_image.name}:{random_tag}"
+        )
         shell(f"neuro image push {generated_image_name} {image_with_repo}")
     output = shell(f"neuro image tags {image_with_repo}")
     assert len(output.splitlines()) == tag_count + default_output_lines
