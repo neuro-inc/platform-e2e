@@ -13,7 +13,6 @@ from platform_e2e import Helper
 
 log = logging.getLogger(__name__)
 
-
 TEST_IMAGE_NAME = "e2e-echo-image"
 
 
@@ -128,7 +127,10 @@ async def test_long_tags_list(
     tag_count = 500
     token = os.environ["CLIENT_TEST_E2E_USER_NAME"]
     api_url = str(helper.client.config.api_url)
-    shell(f"neuro config login-with-token {token} {api_url}")
+    login_cmd = (
+        f"neuro config login-with-token {token} {api_url} " f"&& neuro config docker"
+    )
+    shell(login_cmd)
     shell("neuro config docker")
     shell("neuro config show")
 
@@ -141,8 +143,10 @@ async def test_long_tags_list(
                 f"{remote_image.name}:{random_tag}"
             )
             shell(
-                f"neuro --show-traceback image push "
+                f"{login_cmd} && neuro --show-traceback image push "
                 f"{generated_image_name} {image_with_repo}"
             )
-        output = shell(f"neuro --show-traceback image tags {image_with_repo}")
+        output = shell(
+            f"{login_cmd} && " f"neuro --show-traceback image tags {image_with_repo}"
+        )
     assert len(output.splitlines()) == tag_count + default_output_lines
