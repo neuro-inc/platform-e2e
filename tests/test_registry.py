@@ -130,14 +130,19 @@ async def test_long_tags_list(
     api_url = str(helper.client.config.api_url)
     shell(f"neuro config login-with-token {token} {api_url}")
     shell("neuro config docker")
+    shell("neuro config show")
 
-    for i in range(tag_count):
-        random_tag = uuid()
-        image_with_repo = (
-            f"{remote_image.registry}/"
-            f"{remote_image.owner}/"
-            f"{remote_image.name}:{random_tag}"
-        )
-        shell(f"neuro image push {generated_image_name} {image_with_repo}")
-    output = shell(f"neuro image tags {image_with_repo}")
+    with helper.docker_context(monkeypatch, shell):
+        for i in range(tag_count):
+            random_tag = uuid()
+            image_with_repo = (
+                f"{remote_image.registry}/"
+                f"{remote_image.owner}/"
+                f"{remote_image.name}:{random_tag}"
+            )
+            shell(
+                f"neuro --show-traceback image push "
+                f"{generated_image_name} {image_with_repo}"
+            )
+        output = shell(f"neuro --show-traceback image tags {image_with_repo}")
     assert len(output.splitlines()) == tag_count + default_output_lines
