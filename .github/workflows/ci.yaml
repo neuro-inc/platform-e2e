@@ -59,7 +59,7 @@ jobs:
     - name: Checkout commit
       uses: actions/checkout@v2
     - name: Set env
-      run: echo ::set-env name=TAG::${GITHUB_REF#refs/tags/}
+      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
     - name: Push image
       run: |
         docker login $DOCKER_REPO --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
