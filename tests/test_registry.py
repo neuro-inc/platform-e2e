@@ -6,7 +6,7 @@ from uuid import uuid4 as uuid
 
 import pytest
 
-from neuromation.api import JobStatus, RemoteImage
+from neuro_sdk import JobStatus, RemoteImage
 from platform_e2e import Helper
 
 

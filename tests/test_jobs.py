@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from yarl import URL
 
-from neuromation.api import JobStatus, Resources, Volume
+from neuro_sdk import JobStatus, Resources, Volume
 from platform_e2e import Helper
 
 

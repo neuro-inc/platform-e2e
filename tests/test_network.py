@@ -4,7 +4,7 @@ from typing import Any
 import aiohttp
 import pytest
 
-from neuromation.api import JobStatus, Resources
+from neuro_sdk import JobStatus, Resources
 from platform_e2e import Helper
 
 

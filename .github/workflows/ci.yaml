@@ -25,12 +25,12 @@ jobs:
     - name: Install python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7.7
+        python-version: "3.7"
     - name: Cache packages
       uses: actions/cache@v1
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-py-3.7.7-${{ hashFiles('requirements.txt') }} }}
+        key: ${{ runner.os }}-py-3.7-${{ hashFiles('requirements.txt') }}
     - name: Install dependencies
       run: make setup
     - name: Lint
