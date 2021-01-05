@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 install_requires = (
-    "neuro_sdk>=20.6.2",
+    "neuro_cli",
     "pytest",
     "pytest-dependency>=0.4.0",
     "pytest-timeout>=1.3.3",
