@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from neuromation.api import HTTPPort, JobDescription
+from neuro_sdk import HTTPPort, JobDescription
 from platform_e2e import Helper
 
 

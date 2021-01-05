@@ -20,11 +20,11 @@ build:
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 setup:
-	pip install -U pip
+	pip install -U pip setuptools
 	pip install -r requirements.txt
-	pip install -U -e git+https://github.com/neuromation/platform-client-python.git@master#egg=neuromation
+	pip install -U -e git+https://github.com/neuro-inc/platform-client-python.git@master#subdirectory=neuro-cli\&egg=neuro_cli
 	pip install -e .
-	pip list|grep neuromation
+	pip list|grep neuro
 	pre-commit install
 
 test:
