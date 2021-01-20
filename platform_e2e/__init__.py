@@ -127,7 +127,7 @@ class Helper:
         )
         job = await self.client.jobs.run(
             container=container,
-            is_preemptible=False,
+            scheduler_enabled=False,
             description=description,
             name=name,
             schedule_timeout=schedule_timeout,
