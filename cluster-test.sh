@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-
 die() {
     local MESSAGE=${1:-Unknown error}
     echo >&2
