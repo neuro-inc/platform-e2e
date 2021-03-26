@@ -22,7 +22,7 @@ build:
 setup:
 	pip install -U pip
 	pip install -r requirements.txt
-	pip install -U -e git+https://github.com/neuromation/platform-client-python.git@master#egg=neuromation
+	pip install -U -e 'git+https://github.com/neuro-inc/platform-client-python.git@master#egg=neuro-cli&subdirectory=neuro-cli'
 	pip install -e .
 	pip list|grep neuromation
 
