@@ -116,7 +116,7 @@ class Helper:
         remote_image = _ImageNameParser(
             self.client.username,
             default_cluster=self.cluster_name,
-            registry_url=self.client.config.registry_url,
+            registry_urls={self.cluster_name: self.client.config.registry_url},
         ).parse_remote(image)
         container = Container(
             image=remote_image,
