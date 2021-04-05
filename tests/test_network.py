@@ -18,7 +18,7 @@ INSTALL_CERTIFICATE_COMMAND = (
     "&& rm /etc/ssl/cert.pem "
     "&& ln -s /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem "
     f"&& mkdir -p {CERTIFICATES_DIR} "
-    f"&& wget -q {ROOT_CERT_URL} > {CERTIFICATES_DIR}/letsencrypt-stg.pem "
+    f"&& wget -q -O {CERTIFICATES_DIR}/letsencrypt-stg.pem {ROOT_CERT_URL} "
     "&& update-ca-certificates "
     '&& echo "Letsencrypt staging certificate installed"'
 )
