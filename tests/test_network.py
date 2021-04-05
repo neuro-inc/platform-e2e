@@ -11,14 +11,14 @@ from platform_e2e import Helper
 # Clusters created during Platform Infra CI are configured with
 # letsencrypt staging certificates. So we need to install them into
 # pod container before sending requests to job urls.
-CERTIFICATE_URL = "https://letsencrypt.org/certs/fakelerootx1.pem"
+ROOT_CERT_URL = "https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem"
 CERTIFICATES_DIR = "/usr/local/share/ca-certificates"
 INSTALL_CERTIFICATE_COMMAND = (
     "apk add -q --update --no-cache ca-certificates "
     "&& rm /etc/ssl/cert.pem "
     "&& ln -s /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem "
     f"&& mkdir -p {CERTIFICATES_DIR} "
-    f"&& wget -q -O {CERTIFICATES_DIR}/fakelerootx1.pem {CERTIFICATE_URL} "
+    f"&& wget -q {ROOT_CERT_URL} > {CERTIFICATES_DIR}/letsencrypt-stg.pem "
     "&& update-ca-certificates "
     '&& echo "Letsencrypt staging certificate installed"'
 )
