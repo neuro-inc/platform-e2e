@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -149,7 +150,8 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
                 JobStatus.RUNNING,
                 JobStatus.FAILED,
                 JobStatus.SUCCEEDED,
-            }
+            },
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     jobs_ls_all_explicit = {j.id for j in ret}
