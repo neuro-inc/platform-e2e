@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from uuid import uuid4 as uuid
@@ -13,7 +14,13 @@ from platform_e2e import Helper
 log = logging.getLogger(__name__)
 
 
-TEST_IMAGE_NAME = "e2e-echo-image"
+IMAGE_DATETIME_FORMAT = "%Y%m%d%H%M"
+IMAGE_DATETIME_SEP = "-date"
+
+
+def make_image_name() -> str:
+    time_str = datetime.now().strftime(IMAGE_DATETIME_FORMAT)
+    return f"platform-e2e--{uuid()}{IMAGE_DATETIME_SEP}{time_str}{IMAGE_DATETIME_SEP}"
 
 
 def _generate_image(name: str, tag: str, shell: Callable[..., str]) -> str:
@@ -38,7 +45,7 @@ def tag() -> str:
 
 @pytest.fixture(scope="session")
 def name() -> str:
-    return TEST_IMAGE_NAME
+    return make_image_name()
 
 
 @pytest.fixture()

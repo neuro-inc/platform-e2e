@@ -27,7 +27,6 @@ from neuro_sdk import (
     get,
     login_with_token,
 )
-from neuro_sdk.parsing_utils import _ImageNameParser
 
 
 if sys.version_info >= (3, 7):  # pragma: no cover
@@ -113,11 +112,7 @@ class Helper:
         if volumes is None:
             volumes = []
         log.info("Submit job")
-        remote_image = _ImageNameParser(
-            self.client.username,
-            default_cluster=self.cluster_name,
-            registry_urls={self.cluster_name: self.client.config.registry_url},
-        ).parse_remote(image)
+        remote_image = self.client.parse.remote_image(image)
         container = Container(
             image=remote_image,
             command=command,
