@@ -1,6 +1,5 @@
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from uuid import uuid4 as uuid
@@ -8,19 +7,14 @@ from uuid import uuid4 as uuid
 import pytest
 
 from neuro_sdk import JobStatus, RemoteImage
-from platform_e2e import Helper
+from platform_e2e import Helper, make_image_date_flag
 
 
 log = logging.getLogger(__name__)
 
 
-IMAGE_DATETIME_FORMAT = "%Y%m%d%H%M"
-IMAGE_DATETIME_SEP = "-date"
-
-
 def make_image_name() -> str:
-    time_str = datetime.now().strftime(IMAGE_DATETIME_FORMAT)
-    return f"platform-e2e--{uuid()}{IMAGE_DATETIME_SEP}{time_str}{IMAGE_DATETIME_SEP}"
+    return f"platform-e2e--{uuid()}{make_image_date_flag()}"
 
 
 def _generate_image(name: str, tag: str, shell: Callable[..., str]) -> str:
@@ -103,7 +97,7 @@ def test_user_can_push_image(
         shell(f"docker push {generated_image_with_repo}")
 
 
-@pytest.mark.dependency(depends=["image_pushed"])
+@pytest.mark.dependency(name="pull_tested", depends=["image_pushed"])
 def test_user_can_pull_image(
     image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
 ) -> None:
@@ -111,7 +105,7 @@ def test_user_can_pull_image(
         shell(f"docker pull {image_with_repo}")
 
 
-@pytest.mark.dependency(depends=["image_pushed"])
+@pytest.mark.dependency(name="k8s_access_tested", depends=["image_pushed"])
 async def test_registry_is_accesible_by_k8s(
     helper: Helper, remote_image: RemoteImage, tag: str
 ) -> None:
@@ -122,3 +116,9 @@ async def test_registry_is_accesible_by_k8s(
         wait_timeout=270,
     )
     await helper.check_job_output(job.id, re.escape(tag))
+
+
+@pytest.mark.dependency(depends=["pull_tested", "k8s_access_tested"])
+async def test_can_remove(helper: Helper, remote_image: RemoteImage, tag: str) -> None:
+    digest = await helper.client.images.digest(remote_image)
+    await helper.client.images.rm(remote_image, digest)

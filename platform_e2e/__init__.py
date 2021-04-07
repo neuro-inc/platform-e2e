@@ -5,9 +5,10 @@ import os
 import re
 import sys
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import PIPE, run
-from typing import Any, AsyncIterator, Callable, Iterator, List, Optional
+from typing import Any, AsyncIterator, Callable, Dict, Iterator, List, Optional
 from uuid import uuid4
 
 import aiohttp
@@ -377,3 +378,40 @@ def shell() -> Callable[..., str]:
         return result.stdout.decode("utf-8")
 
     return _shell
+
+
+IMAGE_DATETIME_FORMAT = "%Y%m%d%H%M"
+IMAGE_DATETIME_SEP = "-date"
+
+
+def make_image_date_flag() -> str:
+    time_str = datetime.now().strftime(IMAGE_DATETIME_FORMAT)
+    return f"{IMAGE_DATETIME_SEP}{time_str}{IMAGE_DATETIME_SEP}"
+
+
+@pytest.fixture(scope="session")
+def _drop_once_flag() -> Dict[str, bool]:
+    return {}
+
+
+@pytest.fixture(autouse=True)
+async def drop_old_test_images(
+    helper: Helper, _drop_once_flag: Dict[str, bool]
+) -> None:
+    if _drop_once_flag.get("cleaned"):
+        return
+
+    for image in await helper.client.images.ls():
+        image_name = image.name
+        try:
+            _, time_str, _ = image_name.split(IMAGE_DATETIME_SEP)
+            image_time = datetime.strptime(time_str, IMAGE_DATETIME_FORMAT)
+            if datetime.now() - image_time < timedelta(days=0):
+                continue
+            for _image in await helper.client.images.tags(image):
+                digest = await helper.client.images.digest(_image)
+                await helper.client.images.rm(_image, digest)
+        except Exception:
+            pass
+
+    _drop_once_flag["cleaned"] = True
