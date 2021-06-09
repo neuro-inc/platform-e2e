@@ -196,10 +196,11 @@ then
 else
     info "Run tests"
 
-    export PYTEST_RETRIES=${PYTEST_RETRIES:-1}
     export PYTEST_OPTS="$PYTEST_OPTS --exitfirst --stepwise"
 
-    for ((i=1; i<=$PYTEST_RETRIES; i++))
+    RETRIES=${CLIENT_TEST_E2E_RETRIES:-1}
+
+    for ((i=0; i<=$RETRIES; i++))
     do
         make test
     done

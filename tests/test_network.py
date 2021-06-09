@@ -97,13 +97,13 @@ async def test_connectivity_job_without_http_port(
     # should receive fallback html page
     probe = await helper.http_get(ingress_secret_url)
     assert probe
-    assert probe.strip() != http_job["secret"]
+    assert probe.strip() != no_http_job["secret"]
 
     # internal network test
 
     command = (
         f"sh -c '{INSTALL_CERTIFICATE_COMMAND} && "
-        f"wget -q -T 15 {internal_secret_url} -O -'"
+        f"wget -q -T 15 {internal_secret_url} -O - | grep {no_http_job['secret']}'"
     )
     # This job must succeed
     await helper.run_job(
