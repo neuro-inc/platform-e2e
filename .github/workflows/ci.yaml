@@ -51,20 +51,29 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    env:
-      DOCKER_REPO: neuro-docker-local-private.jfrog.io
-      DOCKER_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
     steps:
     - name: Checkout commit
       uses: actions/checkout@v2
-    - name: Set env
-      run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-    - name: Push image
+    - name: Parse tag
+      id: parse_tag
       run: |
-        docker login $DOCKER_REPO --username=$DOCKER_USERNAME --password=$DOCKER_PASSWORD
-        make build
-        docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:$TAG
-        docker tag platform-e2e:latest $DOCKER_REPO/platform-e2e:latest
-        docker push $DOCKER_REPO/platform-e2e:$TAG
-        docker push $DOCKER_REPO/platform-e2e:latest
+        echo ::set-output name=tag::${GITHUB_REF#refs/tags/v}
+    - name: Login to Artifactory docker registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ secrets.ARTIFACTORY_DOCKER_REPO }}
+        username: ${{ secrets.ARTIFACTORY_USERNAME }}
+        password: ${{ secrets.ARTIFACTORY_PASSWORD }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Build and push to registry
+      uses: docker/build-push-action@v2
+      env:
+        IMAGE_REPO: ${{ secrets.ARTIFACTORY_DOCKER_REPO }}/platform-e2e
+      with:
+        push: true
+        tags: |
+          ${{ env.IMAGE_REPO }}:${{ steps.parse_tag.outputs.tag }}
+          ${{ env.IMAGE_REPO }}:latest
+        cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:cache
+        cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:cache
