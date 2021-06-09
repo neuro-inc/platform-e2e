@@ -2,7 +2,7 @@ IMAGE_NAME ?= platform-e2e
 IMAGE_TAG ?= latest
 CLUSTER_NAME ?= "default"
 SOURCES = setup.py platform_e2e tests
-TEST_OPTS = --durations 10 --timeout 300 --verbose
+TEST_OPTS = $(PYTEST_OPTS) --durations 10 --timeout 300 --verbose
 DOCKER_CMD := docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI $(IMAGE_NAME):$(IMAGE_TAG)
 
 ifdef SKIP_NETWORK_ISOLATION_TEST
@@ -28,10 +28,10 @@ setup:
 	pre-commit install
 
 test:
-	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" tests
+	pytest $(TEST_OPTS) -m "$(TEST_MARKERS)" tests
 
 test-verbose:
-	pytest ${TEST_OPTS} -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
+	pytest $(TEST_OPTS) -m "$(TEST_MARKERS)" --log-cli-level=INFO tests
 
 format:
 ifdef CI_LINT_RUN
@@ -39,7 +39,6 @@ ifdef CI_LINT_RUN
 else
 	pre-commit run --all-files
 endif
-
 
 lint: format
 	mypy $(SOURCES)

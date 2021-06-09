@@ -32,7 +32,8 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     jobs = [
         job
         async for job in helper.client.jobs.list(
-            statuses={JobStatus.RUNNING, JobStatus.PENDING}
+            statuses={JobStatus.RUNNING, JobStatus.PENDING, JobStatus.FAILED},
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     jobs_updated = [j.id for j in jobs]
@@ -53,7 +54,8 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     jobs = [
         job
         async for job in helper.client.jobs.list(
-            statuses={JobStatus.RUNNING, JobStatus.PENDING}
+            statuses={JobStatus.RUNNING, JobStatus.PENDING},
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     job_ids = [j.id for j in jobs]
@@ -74,7 +76,8 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     jobs = [
         job
         async for job in helper.client.jobs.list(
-            statuses={JobStatus.RUNNING, JobStatus.PENDING}
+            statuses={JobStatus.RUNNING, JobStatus.PENDING},
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     job_ids = [j.id for j in jobs]
@@ -95,7 +98,8 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     jobs = [
         job
         async for job in helper.client.jobs.list(
-            statuses={JobStatus.RUNNING, JobStatus.PENDING}
+            statuses={JobStatus.RUNNING, JobStatus.PENDING},
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     job_ids = [j.id for j in jobs]
@@ -119,7 +123,12 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
         await helper.wait_job_state(job_id, JobStatus.RUNNING)
 
     # test no status filters (same as pending+running)
-    ret = [job async for job in helper.client.jobs.list()]
+    ret = [
+        job
+        async for job in helper.client.jobs.list(
+            since=datetime.now() - timedelta(hours=1),
+        )
+    ]
     jobs_ls_no_arg = {j.id for j in ret}
     # check '>=' (not '==') multiple builds run in parallel can interfere
     assert jobs_ls_no_arg >= jobs
@@ -134,7 +143,8 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
     ret = [
         job
         async for job in helper.client.jobs.list(
-            statuses={JobStatus.RUNNING, JobStatus.FAILED}
+            statuses={JobStatus.RUNNING, JobStatus.FAILED},
+            since=datetime.now() - timedelta(hours=1),
         )
     ]
     jobs_ls_running = {j.id for j in ret}

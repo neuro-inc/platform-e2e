@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-
 die() {
     local MESSAGE=${1:-Unknown error}
     echo >&2
@@ -169,7 +167,6 @@ else
   info "Using existing CLIENT_TEST_E2E_USER_NAME"
 fi
 
-
 if [ -z "$CLIENT_TEST_E2E_USER_NAME_ALT" ]
 then
     check_admin_token
@@ -199,5 +196,12 @@ then
   $DOCKER_CMD test
 else
   info "Run tests"
-  make test
+
+  export PYTEST_RETRIES=${PYTEST_RETRIES:-1}
+  export PYTEST_OPTS="$PYTEST_OPTS --exitfirst --stepwise"
+
+  for ((i=1; i<=$PYTEST_RETRIES; i++))
+  do
+    make test
+  done
 fi
