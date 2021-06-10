@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-
 die() {
     local MESSAGE=${1:-Unknown error}
     echo >&2
@@ -12,15 +10,14 @@ die() {
 }
 
 info() {
-      echo $@ >&2
+    echo $@ >&2
 }
 
 check_admin_token() {
-  if [[ -z "$CLIENT_TEST_E2E_ADMIN_TOKEN" ]]
-  then
-    die "Admin token ENV variable empty: CLIENT_TEST_E2E_ADMIN_TOKEN"
-  fi
-
+    if [[ -z "$CLIENT_TEST_E2E_ADMIN_TOKEN" ]]
+    then
+        die "Admin token ENV variable empty: CLIENT_TEST_E2E_ADMIN_TOKEN"
+    fi
 }
 
 create_user() {
@@ -166,9 +163,8 @@ then
     add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
     assign_blob_access $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
-  info "Using existing CLIENT_TEST_E2E_USER_NAME"
+    info "Using existing CLIENT_TEST_E2E_USER_NAME"
 fi
-
 
 if [ -z "$CLIENT_TEST_E2E_USER_NAME_ALT" ]
 then
@@ -183,7 +179,7 @@ then
     fi
     add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
-  info "Using existing CLIENT_TEST_E2E_USER_NAME_ALT"
+    info "Using existing CLIENT_TEST_E2E_USER_NAME_ALT"
 fi
 
 export CLIENT_TEST_E2E_USER_NAME
@@ -192,12 +188,20 @@ export CLIENT_TEST_E2E_URL
 
 if [ "$RUN_MODE" = "docker" ]
 then
-  info "Run tests in docker image"
-  IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
-  IMAGE_TAG=${IMAGE_TAG:-latest}
-  DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
-  $DOCKER_CMD test
+    info "Run tests in docker image"
+    IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
+    IMAGE_TAG=${IMAGE_TAG:-latest}
+    DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
+    $DOCKER_CMD test
 else
-  info "Run tests"
-  make test
+    info "Run tests"
+
+    export PYTEST_OPTS="$PYTEST_OPTS --exitfirst --stepwise"
+
+    RETRIES=${CLIENT_TEST_E2E_RETRIES:-1}
+
+    for ((i=0; i<=$RETRIES; i++))
+    do
+        make test
+    done
 fi
