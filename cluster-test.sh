@@ -203,5 +203,10 @@ else
     for ((i=0; i<=$RETRIES; i++))
     do
         make test
+
+        if [ $? == 0 ]
+        then
+            exit 0
+        fi
     done
 fi

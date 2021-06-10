@@ -43,9 +43,6 @@ endif
 lint: format
 	mypy $(SOURCES)
 
-_docker-setup:
-	pip install -e .
-
 docker-test:
 	@$(DOCKER_CMD) test
 

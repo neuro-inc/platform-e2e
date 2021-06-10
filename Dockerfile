@@ -21,9 +21,18 @@ RUN curl -o /etc/pki/ca-trust/source/anchors/fakelerootx1.pem https://letsencryp
 RUN python3 -m venv /venv
 ENV PATH=/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-COPY . /platform-e2e
 WORKDIR /platform-e2e
 
-RUN make _docker-setup
+COPY setup.py setup.py
+
+RUN pip install -U pip \
+    && pip install -e . \
+    && pip uninstall -y platform-e2e
+
+COPY . /platform-e2e
+
+RUN pip install -e .
+
 ENV BUILDAH_FORMAT=docker
+
 ENTRYPOINT ["/usr/bin/make"]
