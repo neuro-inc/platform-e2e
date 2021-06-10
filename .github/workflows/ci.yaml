@@ -75,5 +75,3 @@ jobs:
         tags: |
           ${{ env.IMAGE_REPO }}:${{ steps.parse_tag.outputs.tag }}
           ${{ env.IMAGE_REPO }}:latest
-        cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:cache
-        cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:cache
