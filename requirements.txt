@@ -1,6 +1,6 @@
 aiohttp==3.7.3
 async_generator==1.10; python_version<"3.7"
-black==21.5b1
+black==21.6b0
 flake8==3.8.4
 flake8-isort==4.0.0
 isort==5.7.0
