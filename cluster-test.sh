@@ -175,7 +175,7 @@ then
     if [ -z "${CLIENT_TEST_E2E_USER_NAME_ALT}" ]
     then
         create_user $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
-        CLIENT_TEST_E2E_USER_NAME=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
+        CLIENT_TEST_E2E_USER_NAME_ALT=$(user_token $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN true)
     fi
     add_user_to_cluster $USER_NAME $CLIENT_TEST_E2E_ADMIN_TOKEN
 else
