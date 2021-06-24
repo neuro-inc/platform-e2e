@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def make_image_name() -> str:
-    return f"platform-e2e--{uuid()}{make_image_date_flag()}"
+    return f"platform-e2e-{uuid()}{make_image_date_flag()}"
 
 
 def _generate_image(name: str, tag: str, shell: Callable[..., str]) -> str:
