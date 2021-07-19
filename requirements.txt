@@ -1,4 +1,4 @@
-aiohttp==3.7.4
+aiohttp==3.7.4.post0
 async_generator==1.10; python_version<"3.7"
 black==21.7b0
 flake8==3.9.2
