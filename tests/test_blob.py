@@ -10,6 +10,7 @@ from platform_e2e import Helper
 pytestmark = pytest.mark.blob_storage
 
 
+@pytest.mark.skip(reason="enable when buckets cli is implemented")
 async def test_blob_storage_interaction(helper: Helper, tmp_path: Path) -> None:
     fname = tmp_path / (str(uuid4()) + ".tmp")
     checksum = await helper.gen_random_file(fname, size=20_000_000)

@@ -105,7 +105,7 @@ class Helper:
                 cpu=0.1,
                 gpu=None,
                 gpu_model=None,
-                memory_mb=20,
+                memory_mb=32,
                 shm=True,
                 tpu_software_version=None,
                 tpu_type=None,
