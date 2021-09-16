@@ -1,5 +1,7 @@
 FROM fedora:31
 
+LABEL org.opencontainers.image.source = "https://github.com/neuro-inc/platform-e2e"
+
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
