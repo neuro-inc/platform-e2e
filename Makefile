@@ -22,7 +22,9 @@ build:
 setup:
 	pip install -U pip setuptools
 	pip install -r requirements.txt
-	pip install -U -e git+https://github.com/neuro-inc/platform-client-python.git@master#subdirectory=neuro-cli\&egg=neuro_cli
+	rm -rf src
+	pip install -U -e git+https://github.com/neuro-inc/platform-client-python.git@master#subdirectory=neuro-sdk\&egg=neuro_sdk
+	pip install -U -e git+https://github.com/neuro-inc/platform-client-python.git@master#subdirectory=neuro-cli\&egg=neuro_cli[awscli,boto3]
 	pip install -e .
 	pip list|grep neuro
 	pre-commit install
