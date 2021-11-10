@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source = "https://github.com/neuro-inc/platform-e
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel jq && \
+    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel jq git && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
@@ -27,13 +27,11 @@ WORKDIR /platform-e2e
 
 COPY setup.py setup.py
 
-RUN pip install -U pip \
-    && pip install -e . \
-    && pip uninstall -y platform-e2e
+RUN pip install -U pip setuptools
 
 COPY . /platform-e2e
 
-RUN pip install -e .
+RUN pip install .[dev]
 
 ENV BUILDAH_FORMAT=docker
 
