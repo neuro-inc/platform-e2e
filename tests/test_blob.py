@@ -18,11 +18,11 @@ async def test_blob_storage_interaction(helper: Helper, tmp_path: Path) -> None:
 
     async with helper.create_tmp_bucket() as bucket_name:
         # Upload local file
-        await helper.client.blob_storage.upload_file(
+        await helper.client.buckets.upload_file(
             URL(fname.as_uri()), URL(f"blob:{bucket_name}/data/foo")
         )
 
-        await helper.client.blob_storage.download_file(
+        await helper.client.buckets.download_file(
             URL(f"blob:{bucket_name}/data/foo"), URL(dst_file.as_uri())
         )
 

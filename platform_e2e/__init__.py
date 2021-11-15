@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import PIPE, run
+from time import time
 from typing import Any, AsyncIterator, Callable, Dict, Iterator, List, Optional
 from uuid import uuid4
 
@@ -265,27 +266,52 @@ class Helper:
 
             docker_config.unlink()
 
+    async def create_bucket(self, name: str, *, wait: bool = False) -> None:
+        await self.client.buckets.create(name)
+        if wait:
+            t0 = time()
+            delay = 1
+            url = URL(f"blob:{name}")
+            while time() - t0 < 60:
+                try:
+                    async with self.client.buckets.list_blobs(url, limit=1) as it:
+                        async for _ in it:
+                            pass
+                    return
+                except Exception as e:
+                    print(e)
+                    delay = min(delay * 2, 10)
+                    await asyncio.sleep(delay)
+            raise RuntimeError(f"Bucket {name} doesn't available after the creation")
+
+    async def delete_bucket(self, bucket_name_or_id: str) -> None:
+        await self.client.buckets.rm(bucket_name_or_id)
+
+    async def cleanup_bucket(self, bucket_name_or_id: str) -> None:
+        # Each test needs a clean bucket state and we can't delete bucket until it's
+        # cleaned
+        async with self.client.buckets.list_blobs(
+            URL(f"blob:{bucket_name_or_id}"), recursive=True
+        ) as blobs_it:
+            # XXX: We do assume we will not have tests that run 10000 of objects.
+            # If we do, please add a semaphore here.
+            tasks = []
+            async for blob in blobs_it:
+                log.info("Removing %s %s", bucket_name_or_id, blob.key)
+                tasks.append(
+                    self.client.buckets.delete_blob(bucket_name_or_id, key=blob.key)
+                )
+        await asyncio.gather(*tasks)
+
     @asynccontextmanager
     async def create_tmp_bucket(self) -> AsyncIterator[str]:
-        blob_storage = self.client.blob_storage
         name = "neuro-test-e2e-" + self.username
-        available = [x.name for x in await blob_storage.list_buckets()]
+        available = [x.name async for x in self.client.buckets.list_blobs()]
         if name not in available:
-            await blob_storage.create_bucket(name)
+            await self.create_bucket(name)
         yield name
         await self.cleanup_bucket(name)
-        await blob_storage.delete_bucket(name)
-
-    async def cleanup_bucket(self, bucket_name: str) -> None:
-        blobs, _ = await self.client.blob_storage.list_blobs(
-            bucket_name, recursive=True
-        )
-        if not blobs:
-            return
-
-        for blob in blobs:
-            log.info("Removing %s %s", bucket_name, blob.key)
-            await self.client.blob_storage.delete_blob(bucket_name, key=blob.key)
+        await self.delete_bucket(name)
 
 
 def ensure_config(
