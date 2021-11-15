@@ -8,8 +8,8 @@ repos:
   rev: v1.3.0
   hooks:
   - id: yesqa
-- repo: https://github.com/pre-commit/mirrors-isort
-  rev: 'v5.9.3'
+- repo: https://github.com/PyCQA/isort
+  rev: '5.10.1'
   hooks:
   - id: isort
 - repo: https://github.com/psf/black
@@ -43,13 +43,13 @@ repos:
   hooks:
   - id: pyupgrade
     args: ['--py36-plus']
-- repo: https://gitlab.com/pycqa/flake8
-  rev: '3.9.2'
+- repo: https://github.com/PyCQA/flake8
+  rev: '4.0.1'
   hooks:
   - id: flake8
     exclude: "^docs/"
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.6.7
+  rev: v1.6.8
   hooks:
   - id: actionlint-docker
     args: ["-ignore", "SC2155:", "-ignore", "SC2086:", "-ignore", "SC1004:"]
