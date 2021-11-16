@@ -6,10 +6,11 @@ import re
 import sys
 from contextlib import contextmanager
 from datetime import datetime, timedelta
+from hashlib import sha1
 from pathlib import Path
 from subprocess import PIPE, run
 from time import time
-from typing import Any, AsyncIterator, Callable, Dict, Iterator, List, Optional
+from typing import Any, AsyncIterator, Callable, Dict, Iterator, List, Optional, Union
 from uuid import uuid4
 
 import aiohttp
@@ -314,6 +315,34 @@ class Helper:
         yield name
         await self.cleanup_bucket(name)
         await self.delete_bucket(name)
+
+    async def upload_blob(
+        self, bucket_name: str, key: str, file: Union[Path, str]
+    ) -> None:
+        await self.client.buckets.upload_file(
+            URL("file:" + str(file)), URL(f"blob:{bucket_name}/{key}")
+        )
+
+    async def check_blob_size(self, bucket_name: str, key: str, size: int) -> None:
+        blob = await self.client.buckets.head_blob(bucket_name, key)
+        assert blob.size == size
+
+    async def check_blob_checksum(
+        self, bucket_name: str, key: str, checksum: str, tmp_path: Path
+    ) -> None:
+        await self.client.buckets.download_file(
+            URL(f"blob:{bucket_name}/{key}"),
+            URL("file:" + str(tmp_path)),
+        )
+        assert self.hash_hex(tmp_path) == checksum, "checksum test failed for {url}"
+
+    def hash_hex(self, file: Union[str, Path]) -> str:
+        _hash = sha1()
+        with open(file, "rb") as f:
+            for block in iter(lambda: f.read(16 * 1024 * 1024), b""):
+                _hash.update(block)
+
+        return _hash.hexdigest()
 
 
 def ensure_config(

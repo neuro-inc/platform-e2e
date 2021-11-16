@@ -2,7 +2,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from yarl import URL
 
 from platform_e2e import Helper
 
@@ -10,20 +9,21 @@ from platform_e2e import Helper
 pytestmark = pytest.mark.blob_storage
 
 
-async def test_blob_storage_interaction(helper: Helper, tmp_path: Path) -> None:
+async def test_e2e_blob_storage_upload_download(
+    tmp_path: Path,
+    helper: Helper,
+) -> None:
     fname = tmp_path / (str(uuid4()) + ".tmp")
     checksum = await helper.gen_random_file(fname, size=20_000_000)
-    dst_file = tmp_path / ("out-" + str(fname.name))
+    key = "folder/foo"
 
-    async with helper.create_tmp_bucket() as bucket_name:
+    async with helper.create_tmp_bucket() as tmp_bucket:
+
         # Upload local file
-        await helper.client.buckets.upload_file(
-            URL(fname.as_uri()), URL(f"blob:{bucket_name}/data/foo")
-        )
+        await helper.upload_blob(bucket_name=tmp_bucket, key=key, file=fname)
 
-        await helper.client.buckets.download_file(
-            URL(f"blob:{bucket_name}/data/foo"), URL(dst_file.as_uri())
-        )
+        # Confirm file has been uploaded
+        await helper.check_blob_size(tmp_bucket, key, 20_000_000)
 
-    # confirm checksum
-    assert checksum == await helper.calc_local_checksum(dst_file)
+        # Download into local file and confirm checksum
+        await helper.check_blob_checksum(tmp_bucket, key, checksum, tmp_path / "bar")
