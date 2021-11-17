@@ -454,7 +454,7 @@ async def drop_old_test_images(
     if _drop_once_flag.get("cleaned"):
         return
 
-    for image in await helper.client.images.ls():
+    for image in await helper.client.images.list():
         image_name = image.name
         try:
             _, time_str, _ = image_name.split(IMAGE_DATETIME_SEP)
