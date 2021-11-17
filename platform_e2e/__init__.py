@@ -311,7 +311,7 @@ class Helper:
         try:
             self.client.buckets.get(name)
         except ResourceNotFound:
-            await self.create_bucket(name)
+            await self.create_bucket(name, wait=True)
         yield name
         await self.cleanup_bucket(name)
         await self.delete_bucket(name)
