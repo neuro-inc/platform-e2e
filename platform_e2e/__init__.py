@@ -25,7 +25,6 @@ from neuro_sdk import (
     HTTPPort,
     JobDescription,
     JobStatus,
-    ResourceNotFound,
     Resources,
     Volume,
     get,
@@ -308,10 +307,7 @@ class Helper:
     @asynccontextmanager
     async def create_tmp_bucket(self) -> AsyncIterator[str]:
         name = "neuro-test-e2e-" + self.username
-        try:
-            self.client.buckets.get(name)
-        except ResourceNotFound:
-            await self.create_bucket(name, wait=True)
+        await self.create_bucket(name, wait=True)
         yield name
         await self.cleanup_bucket(name)
         await self.delete_bucket(name)
