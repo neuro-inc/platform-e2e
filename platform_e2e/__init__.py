@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 import re
+import secrets
 import sys
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -306,7 +307,7 @@ class Helper:
 
     @asynccontextmanager
     async def create_tmp_bucket(self) -> AsyncIterator[str]:
-        name = "neuro-test-e2e-" + self.username
+        name = f"neuro-e2e-{secrets.token_hex(10)}"
         await self.create_bucket(name, wait=True)
         yield name
         await self.cleanup_bucket(name)
