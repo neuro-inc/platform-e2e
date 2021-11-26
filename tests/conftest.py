@@ -30,7 +30,10 @@ def secret_job(helper: Helper, loop: asyncio.AbstractEventLoop) -> Any:
                 if http_auth:
                     description += " with authentication"
         status: JobDescription = await helper.run_job(
-            "nginx:latest", command, description=description, http=http
+            "ghcr.io/neuro-inc/nginx:latest",
+            command,
+            description=description,
+            http=http,
         )
         return {
             "id": status.id,

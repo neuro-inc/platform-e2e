@@ -49,7 +49,7 @@ async def test_connectivity_job_with_http_port(secret_job: Any, helper: Helper) 
         f"&& wget -q -T 15 {ingress_secret_url} -O -'"
     )
     job = await helper.run_job(
-        "alpine:latest",
+        "ghcr.io/neuro-inc/alpine:latest",
         command,
         description="secret ingress fetcher ",
         wait_state=JobStatus.SUCCEEDED,
@@ -64,7 +64,7 @@ async def test_connectivity_job_with_http_port(secret_job: Any, helper: Helper) 
         f"&& wget -q -T 15 {internal_secret_url} -O -'"
     )
     job = await helper.run_job(
-        "alpine:latest",
+        "ghcr.io/neuro-inc/alpine:latest",
         command,
         description="secret internal network fetcher ",
         wait_state=JobStatus.SUCCEEDED,
@@ -107,7 +107,7 @@ async def test_connectivity_job_without_http_port(
     )
     # This job must succeed
     await helper.run_job(
-        "alpine:latest",
+        "ghcr.io/neuro-inc/alpine:latest",
         command,
         description="secret internal network fetcher ",
         wait_state=JobStatus.SUCCEEDED,
@@ -128,7 +128,7 @@ async def test_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
         f"&& wget -q -T 15 {ingress_secret_url} -O -'"
     )
     job = await helper_alt.run_job(
-        "alpine:latest",
+        "ghcr.io/neuro-inc/alpine:latest",
         command,
         description="secret ingress fetcher ",
         wait_state=JobStatus.SUCCEEDED,
@@ -145,7 +145,7 @@ async def test_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
     )
     # This job must fail
     job = await helper_alt.run_job(
-        "alpine:latest",
+        "ghcr.io/neuro-inc/alpine:latest",
         command,
         description="secret internal network fetcher ",
         wait_state=JobStatus.FAILED,

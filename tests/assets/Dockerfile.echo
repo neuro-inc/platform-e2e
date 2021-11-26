@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM ghcr.io/neuro-inc/alpine:latest
 ARG TAG=NotATag
 ENV TAG ${TAG}
 CMD echo $TAG

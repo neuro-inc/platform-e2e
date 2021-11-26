@@ -14,7 +14,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
     job = await helper.run_job(
-        "ubuntu:latest",
+        "ghcr.io/neuro-inc/ubuntu:latest",
         command,
         resources=Resources(
             cpu=0.1,
@@ -66,10 +66,10 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     # Run a new job
     command = 'bash -c "sleep 10m; false"'
     first_job = await helper.run_job(
-        "ubuntu:latest", command, wait_state=JobStatus.PENDING
+        "ghcr.io/neuro-inc/ubuntu:latest", command, wait_state=JobStatus.PENDING
     )
     second_job = await helper.run_job(
-        "ubuntu:latest", command, wait_state=JobStatus.PENDING
+        "ghcr.io/neuro-inc/ubuntu:latest", command, wait_state=JobStatus.PENDING
     )
 
     # Check it is in a running,pending job list now
@@ -115,7 +115,7 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
     for _ in range(N_JOBS):
         command = "sleep 10m"
         job = await helper.run_job(
-            "ubuntu:latest", command, wait_state=JobStatus.PENDING
+            "ghcr.io/neuro-inc/ubuntu:latest", command, wait_state=JobStatus.PENDING
         )
         jobs.add(job.id)
 
@@ -179,7 +179,10 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
         if not name_0:
             name_0 = name
         job = await helper.run_job(
-            "ubuntu:latest", command, name=name, wait_state=JobStatus.PENDING
+            "ghcr.io/neuro-inc/ubuntu:latest",
+            command,
+            name=name,
+            wait_state=JobStatus.PENDING,
         )
         jobs_name_map[name] = job.id
 
@@ -228,7 +231,7 @@ async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
     command = "cp /data/foo /res/foo"
 
     await helper.run_job(
-        "ubuntu:latest",
+        "ghcr.io/neuro-inc/ubuntu:latest",
         command,
         volumes=[
             Volume(
@@ -263,7 +266,9 @@ async def test_job_logs(helper: Helper) -> None:
     )
     expected_output = "\n".join(str(i) for i in range(1, n + 1)) + "\n"
 
-    job = await helper.run_job("ubuntu:latest", cmd, wait_state=JobStatus.RUNNING)
+    job = await helper.run_job(
+        "ghcr.io/neuro-inc/ubuntu:latest", cmd, wait_state=JobStatus.RUNNING
+    )
 
     # Pod exists, check logs from pod
     await helper.check_job_output(job.id, expected_output)
