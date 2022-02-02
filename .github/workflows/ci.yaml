@@ -52,8 +52,8 @@ jobs:
     steps:
     - name: Checkout commit
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+    - name: Get all git tags
+      run: git fetch --prune --unshallow --tags
     - name: Parse tag
       id: parse_tag
       run: |
