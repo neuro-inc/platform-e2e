@@ -65,6 +65,7 @@ jobs:
       env:
         IMAGE_REPO: ghcr.io/neuro-inc/platform-e2e
       with:
+        context: "."
         push: true
         tags: |
           ${{ env.IMAGE_REPO }}:${{ steps.parse_tag.outputs.tag }}
