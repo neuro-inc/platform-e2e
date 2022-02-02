@@ -52,6 +52,8 @@ jobs:
     steps:
     - name: Checkout commit
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Parse tag
       id: parse_tag
       run: |
