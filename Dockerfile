@@ -16,7 +16,7 @@ RUN rm -rf  /var/lib/containers/ && \
 
 # clusters created during CI process use letsencrypt staging environment
 # install letsencrypt staging environment certificate to trust store
-RUN curl -o /etc/pki/ca-trust/source/anchors/fakelerootx1.pem https://letsencrypt.org/certs/fakelerootx1.pem \
+RUN curl -o /etc/pki/ca-trust/source/anchors/letsencrypt-stg-root-x1.pem https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem \
     && update-ca-trust
 
 
