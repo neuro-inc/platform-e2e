@@ -17,7 +17,7 @@ jobs:
       CLIENT_TEST_E2E_USER_NAME_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_NAME_ALT }}
     steps:
     - name: Checkout commit
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install python
       uses: actions/setup-python@v3
       with:
@@ -51,7 +51,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
     - name: Checkout commit
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get all git tags
       run: git fetch --prune --unshallow --tags
     - name: Login to GitHub Container Registry
