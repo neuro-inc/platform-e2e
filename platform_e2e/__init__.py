@@ -4,23 +4,19 @@ import logging
 import os
 import re
 import secrets
-import sys
-from contextlib import contextmanager
-from datetime import datetime, timedelta
+import subprocess
+import time
+from contextlib import asynccontextmanager, contextmanager
 from hashlib import sha1
 from pathlib import Path
-from subprocess import PIPE, run
-from time import time
-from typing import Any, AsyncIterator, Callable, Dict, Iterator, List, Optional, Union
+from typing import Any, AsyncIterator, Iterator, List, Optional, Union
 from uuid import uuid4
 
 import aiohttp
-import pytest
 from yarl import URL
 
 from neuro_sdk import (
     CONFIG_ENV_NAME,
-    DEFAULT_CONFIG_PATH,
     Client,
     Container,
     HTTPPort,
@@ -28,19 +24,10 @@ from neuro_sdk import (
     JobStatus,
     Resources,
     Volume,
-    get,
     login_with_token,
 )
 
 
-if sys.version_info >= (3, 7):  # pragma: no cover
-    from contextlib import asynccontextmanager
-else:
-    from async_generator import asynccontextmanager
-
-
-NETWORK_TIMEOUT = 60.0 * 3
-CLIENT_TIMEOUT = aiohttp.ClientTimeout(None, None, NETWORK_TIMEOUT, NETWORK_TIMEOUT)
 JOB_OUTPUT_TIMEOUT = 60 * 5
 JOB_OUTPUT_SLEEP_SECONDS = 2
 
@@ -187,11 +174,9 @@ class Helper:
         """
         Wait until job output satisfies given regexp
         """
-        loop = asyncio.get_event_loop()
-
-        started_at = loop.time()
+        started_at = time.monotonic()
         chunks = []
-        while loop.time() - started_at < JOB_OUTPUT_TIMEOUT:
+        while time.monotonic() - started_at < JOB_OUTPUT_TIMEOUT:
             log.info("Monitor %s", job_id)
             async for chunk in self.client.jobs.monitor(job_id):
                 if not chunk:
@@ -199,7 +184,7 @@ class Helper:
                 chunks.append(chunk.decode())
                 if re.search(expected, "".join(chunks), re_flags):
                     return
-                if loop.time() - started_at < JOB_OUTPUT_TIMEOUT:
+                if time.monotonic() - started_at < JOB_OUTPUT_TIMEOUT:
                     break
                 await asyncio.sleep(JOB_OUTPUT_SLEEP_SECONDS)
 
@@ -250,9 +235,7 @@ class Helper:
         return hasher.hexdigest()
 
     @contextmanager
-    def docker_context(
-        self, monkeypatch: Any, shell: Callable[..., str]
-    ) -> Iterator[None]:
+    def docker_context(self, monkeypatch: Any) -> Iterator[None]:
         with monkeypatch.context() as context:
             # docker support
             context.setenv("DOCKER_CONFIG", f"{self._tmp_path}")
@@ -271,10 +254,10 @@ class Helper:
     async def create_bucket(self, name: str, *, wait: bool = False) -> None:
         await self.client.buckets.create(name)
         if wait:
-            t0 = time()
+            t0 = time.monotonic()
             delay = 1
             url = URL(f"blob:{name}")
-            while time() - t0 < 60:
+            while time.monotonic() - t0 < 60:
                 try:
                     async with self.client.buckets.list_blobs(url, limit=1) as it:
                         async for _ in it:
@@ -342,7 +325,7 @@ class Helper:
         return _hash.hexdigest()
 
 
-def ensure_config(
+async def ensure_config(
     token_env_name: str, uri_env_name: str, tmp_path_factory: Any
 ) -> Optional[Path]:
     token = os.environ.get(token_env_name)
@@ -351,121 +334,30 @@ def ensure_config(
         log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
         log.info("Api URL: %s", uri)
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(
-            login_with_token(
-                token=token, url=URL(uri), timeout=CLIENT_TIMEOUT, path=config_path
-            )
-        )
-        loop.close()
+        await login_with_token(token=token, url=URL(uri), path=config_path)
         return config_path
     else:
         return None
 
 
-@pytest.fixture(scope="session")
-def config_path(tmp_path_factory: Any) -> Path:
-    path = ensure_config(
-        "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
+def shell(cmd: str, timeout: float = 300) -> str:
+    log.info(f"Run {cmd}")
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        timeout=timeout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
-
-    if not path:
-        path = Path(DEFAULT_CONFIG_PATH).expanduser()
-        if not path.exists():
-            raise RuntimeError(
-                f"Neither config file({path}) exists "
-                f"nor ENV variable(CLIENT_TEST_E2E_USER_NAME) set"
-            )
-        log.info("Default config used: %s", path)
-    return path
-
-
-@pytest.fixture(scope="session")
-def config_path_alt(tmp_path_factory: Any) -> Path:
-    path = ensure_config(
-        "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
-    )
-    if path is None:
-        # pytest.skip() actually raises an exception itself
-        # raise statement is required for mypy checker
-        raise pytest.skip("CLIENT_TEST_E2E_USER_NAME_ALT variable is not set")
-    else:
-        return path
-
-
-@pytest.fixture()
-async def helper(
-    config_path: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
-) -> AsyncIterator[Helper]:
-    client = await get(timeout=CLIENT_TIMEOUT, path=config_path)
-    print("API URL", client.config.api_url)
-    yield Helper(client, tmp_path, config_path)
-    await client.close()
-
-
-@pytest.fixture()
-async def helper_alt(
-    config_path_alt: Path, loop: asyncio.AbstractEventLoop, tmp_path: Path
-) -> AsyncIterator[Helper]:
-    client = await get(timeout=CLIENT_TIMEOUT, path=config_path_alt)
-    print("Alt API URL", client.config.api_url)
-    yield Helper(client, tmp_path, config_path_alt)
-    await client.close()
-
-
-@pytest.fixture()
-def shell() -> Callable[..., str]:
-    def _shell(cmd: str, timeout: float = 300) -> str:
-        log.info(f"Run {cmd}")
-        result = run(cmd, shell=True, timeout=timeout, stdout=PIPE, stderr=PIPE)
-        if result.returncode != os.EX_OK:
-            raise SystemError(
-                f"Command `{cmd}` exits with code {result.returncode}, "
-                f"Stderr: {result.stderr.decode('utf-8')},"
-                f"Stdout: {result.stdout.decode('utf-8')}"
-            )
-        if result.stderr:
-            log.warning(
-                f"Command {cmd} write something to stderr: "
-                f"{result.stderr.decode('utf-8')}"
-            )
-        return result.stdout.decode("utf-8")
-
-    return _shell
-
-
-IMAGE_DATETIME_FORMAT = "%Y%m%d%H%M"
-IMAGE_DATETIME_SEP = "-date"
-
-
-def make_image_date_flag() -> str:
-    time_str = datetime.now().strftime(IMAGE_DATETIME_FORMAT)
-    return f"{IMAGE_DATETIME_SEP}{time_str}{IMAGE_DATETIME_SEP}"
-
-
-@pytest.fixture(scope="session")
-def _drop_once_flag() -> Dict[str, bool]:
-    return {}
-
-
-@pytest.fixture(autouse=True)
-async def drop_old_test_images(
-    helper: Helper, _drop_once_flag: Dict[str, bool]
-) -> None:
-    if _drop_once_flag.get("cleaned"):
-        return
-
-    for image in await helper.client.images.list():
-        image_name = image.name
-        try:
-            _, time_str, _ = image_name.split(IMAGE_DATETIME_SEP)
-            image_time = datetime.strptime(time_str, IMAGE_DATETIME_FORMAT)
-            if datetime.now() - image_time < timedelta(days=0):
-                continue
-            for _image in await helper.client.images.tags(image):
-                digest = await helper.client.images.digest(_image)
-                await helper.client.images.rm(_image, digest)
-        except Exception:
-            pass
-
-    _drop_once_flag["cleaned"] = True
+    if result.returncode != os.EX_OK:
+        raise SystemError(
+            f"Command `{cmd}` exits with code {result.returncode}, "
+            f"Stderr: {result.stderr.decode('utf-8')},"
+            f"Stdout: {result.stdout.decode('utf-8')}"
+        )
+    if result.stderr:
+        log.warning(
+            f"Command {cmd} write something to stderr: "
+            f"{result.stderr.decode('utf-8')}"
+        )
+    return result.stdout.decode("utf-8")
