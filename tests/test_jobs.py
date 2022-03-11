@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Callable
 from uuid import uuid4
 
 from yarl import URL
@@ -107,7 +108,9 @@ async def test_two_jobs_at_once(helper: Helper) -> None:
     assert second_job.id not in job_ids
 
 
-async def test_job_list_filtered_by_status(helper: Helper) -> None:
+async def test_job_list_filtered_by_status(
+    helper: Helper, kill_later: Callable[[str], None]
+) -> None:
     N_JOBS = 5
 
     # submit N jobs
@@ -117,6 +120,7 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
         job = await helper.run_job(
             "ghcr.io/neuro-inc/ubuntu:latest", command, wait_state=JobStatus.PENDING
         )
+        kill_later(job.id)
         jobs.add(job.id)
 
     for job_id in jobs:
@@ -169,7 +173,9 @@ async def test_job_list_filtered_by_status(helper: Helper) -> None:
     assert jobs_ls_all_explicit >= jobs
 
 
-async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
+async def test_job_list_filtered_by_status_and_name(
+    helper: Helper, kill_later: Callable[[str], None]
+) -> None:
     N_JOBS = 5
     jobs_name_map = dict()
     name_0 = None
@@ -184,6 +190,7 @@ async def test_job_list_filtered_by_status_and_name(helper: Helper) -> None:
             name=name,
             wait_state=JobStatus.PENDING,
         )
+        kill_later(job.id)
         jobs_name_map[name] = job.id
 
     assert name_0 is not None

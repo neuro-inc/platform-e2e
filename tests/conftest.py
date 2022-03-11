@@ -1,13 +1,13 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, AsyncIterator, Dict, Optional
+from typing import Any, AsyncIterator, Awaitable, Callable, Dict, Optional
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 
-from neuro_sdk import DEFAULT_CONFIG_PATH, HTTPPort, JobDescription, get
+from neuro_sdk import DEFAULT_CONFIG_PATH, HTTPPort, JobStatus, ResourceNotFound, get
 from platform_e2e import Helper, ensure_config
 
 
@@ -68,8 +68,29 @@ async def helper_alt(
 
 
 @pytest.fixture
-def secret_job(helper: Helper) -> Any:
-    async def go(
+async def kill_later(helper: Helper) -> AsyncIterator[Callable[[str], None]]:
+    job_ids = []
+
+    def _kill_later(job_id: str) -> None:
+        job_ids.append(job_id)
+
+    yield _kill_later
+
+    for job_id in job_ids:
+        try:
+            await helper.client.jobs.kill(job_id)
+        except ResourceNotFound:
+            pass
+
+    for job_id in job_ids:
+        await helper.wait_job_state(job_id, JobStatus.CANCELLED)
+
+
+@pytest.fixture
+def secret_job(
+    helper: Helper, kill_later: Callable[[str], None]
+) -> Callable[..., Awaitable[Dict[str, Any]]]:
+    async def _run(
         http_port: bool, http_auth: bool = False, description: Optional[str] = None
     ) -> Dict[str, Any]:
         secret = str(uuid4())
@@ -88,17 +109,18 @@ def secret_job(helper: Helper) -> Any:
                 description += " and forwarded http port"
                 if http_auth:
                     description += " with authentication"
-        status: JobDescription = await helper.run_job(
+        job = await helper.run_job(
             "ghcr.io/neuro-inc/nginx:latest",
             command,
             description=description,
             http=http,
         )
+        kill_later(job.id)
         return {
-            "id": status.id,
+            "id": job.id,
             "secret": secret,
-            "ingress_url": status.http_url,
-            "internal_hostname": status.internal_hostname,
+            "ingress_url": job.http_url,
+            "internal_hostname": job.internal_hostname,
         }
 
-    return go
+    return _run
