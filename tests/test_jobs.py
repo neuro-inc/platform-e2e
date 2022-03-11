@@ -221,7 +221,7 @@ async def test_job_storage_interaction(helper: Helper, tmp_path: Path) -> None:
     await helper.mkdir("data")
 
     fname = tmp_path / (str(uuid4()) + ".tmp")
-    checksum = await helper.gen_random_file(fname, size=20_000_000)
+    checksum = await helper.gen_random_file(fname, size=20_000)
 
     # Upload local file
     await helper.client.storage.upload_file(

@@ -33,7 +33,6 @@ JOB_RESOURCES = Resources(
 
 
 async def test_connectivity_job_with_http_port(secret_job: Any, helper: Helper) -> None:
-
     http_job = await secret_job(True)
 
     ingress_secret_url = http_job["ingress_url"].with_path("/secret.txt")
