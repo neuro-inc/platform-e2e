@@ -1,124 +1,87 @@
 import logging
 import re
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any, AsyncIterator, Iterator
 from uuid import uuid4 as uuid
 
 import pytest
+import pytest_asyncio
 
-from neuro_sdk import JobStatus, RemoteImage
-from platform_e2e import Helper, make_image_date_flag
+from neuro_sdk import JobStatus, RemoteImage, ResourceNotFound
+from platform_e2e import Helper, shell
 
 
 log = logging.getLogger(__name__)
 
 
-def make_image_name() -> str:
-    return f"platform-e2e-{uuid()}{make_image_date_flag()}"
-
-
-def _generate_image(name: str, tag: str, shell: Callable[..., str]) -> str:
+@contextmanager
+def _build_image(image: RemoteImage) -> Iterator[None]:
     dockerfile = Path(__file__).parent / "assets/Dockerfile.echo"
-    image_name = f"{name}:{tag}"
-    log.info(f"Build image {image_name}")
+    image_url = image.as_docker_url()
+    log.info(f"Build image {image_url}")
     # build can be failed with error like  next:
     #   error creating read-write layer with ID "xxx": operation not permitted
     # if node has docker engine with aufs storage driver
     # In this case platform-e2e image must be runned with --privileged switch
     shell(
-        f"docker build -f {dockerfile} -t {image_name} --build-arg TAG={tag} "
+        f"docker build -f {dockerfile} -t {image_url} --build-arg TAG={image.tag} "
         f"{dockerfile.parent}"
     )
-    return image_name
+    yield
+    log.info(f"Remove image {image_url}")
+    shell(f"docker rmi {image_url}")
 
 
-@pytest.fixture(scope="session")
-def tag() -> str:
-    return str(uuid())
-
-
-@pytest.fixture(scope="session")
-def name() -> str:
-    return make_image_name()
-
-
-@pytest.fixture()
-def generated_image_name(
-    name: str, tag: str, shell: Callable[..., str]
-) -> Iterator[str]:
-    image_name = _generate_image(name, tag, shell)
-    yield image_name
-    log.info(f"Remove image {image_name}")
-    shell(f"docker rmi {image_name}")
-    pass
-
-
-@pytest.fixture()
-def remote_image(name: str, tag: str, helper: Helper) -> RemoteImage:
-    return RemoteImage(
-        name=name,
-        tag=tag,
+@pytest_asyncio.fixture(scope="session")
+async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
+    image = RemoteImage(
+        name="platform-e2e",
+        tag=str(uuid()),
         registry=helper.registry.host,
         owner=helper.username,
         cluster_name=helper.cluster_name,
     )
-
-
-@pytest.fixture()
-def image_with_repo(
-    remote_image: RemoteImage, helper: Helper, shell: Callable[..., str]
-) -> Iterator[str]:
-    image_with_repo = (
-        f"{remote_image.registry}/"
-        f"{remote_image.owner}/"
-        f"{remote_image.name}:{remote_image.tag}"
-    )
-    yield image_with_repo
-    log.info(f"Remove image {image_with_repo}")
-    shell(f"docker rmi {image_with_repo}")
-
-
-@pytest.fixture
-def generated_image_with_repo(
-    tag: str, shell: Callable[..., str], generated_image_name: str, image_with_repo: str
-) -> str:
-    shell(f"docker tag {generated_image_name} {image_with_repo}")
-    return image_with_repo
+    with _build_image(image):
+        yield image
+        try:
+            digest = await helper.client.images.digest(image)
+            await helper.client.images.rm(image, digest)
+        except ResourceNotFound:
+            pass
 
 
 @pytest.mark.dependency(name="image_pushed")
 def test_user_can_push_image(
-    generated_image_with_repo: str,
-    shell: Callable[..., str],
-    helper: Helper,
-    monkeypatch: Any,
+    helper: Helper, image: RemoteImage, monkeypatch: Any
 ) -> None:
-    with helper.docker_context(monkeypatch, shell):
-        shell(f"docker push {generated_image_with_repo}")
+    with helper.docker_context(monkeypatch):
+        shell(f"docker push {image.as_docker_url()}")
 
 
 @pytest.mark.dependency(name="pull_tested", depends=["image_pushed"])
 def test_user_can_pull_image(
-    image_with_repo: str, shell: Callable[..., str], helper: Helper, monkeypatch: Any
+    helper: Helper, image: RemoteImage, monkeypatch: Any
 ) -> None:
-    with helper.docker_context(monkeypatch, shell):
-        shell(f"docker pull {image_with_repo}")
+    with helper.docker_context(monkeypatch):
+        shell(f"docker pull {image.as_docker_url()}")
 
 
 @pytest.mark.dependency(name="k8s_access_tested", depends=["image_pushed"])
-async def test_registry_is_accesible_by_k8s(
-    helper: Helper, remote_image: RemoteImage, tag: str
+async def test_registry_is_accessible_by_k8s(
+    helper: Helper, image: RemoteImage
 ) -> None:
     job = await helper.run_job(
-        str(remote_image),
+        str(image),
         wait_state=JobStatus.SUCCEEDED,
         schedule_timeout=240,
         wait_timeout=270,
     )
-    await helper.check_job_output(job.id, re.escape(tag))
+    assert image.tag
+    await helper.check_job_output(job.id, re.escape(image.tag))
 
 
 @pytest.mark.dependency(depends=["pull_tested", "k8s_access_tested"])
-async def test_can_remove(helper: Helper, remote_image: RemoteImage, tag: str) -> None:
-    digest = await helper.client.images.digest(remote_image)
-    await helper.client.images.rm(remote_image, digest)
+async def test_user_can_remove_image(helper: Helper, image: RemoteImage) -> None:
+    digest = await helper.client.images.digest(image)
+    await helper.client.images.rm(image, digest)
