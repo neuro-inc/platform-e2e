@@ -329,12 +329,13 @@ async def ensure_config(
     token_env_name: str, uri_env_name: str, tmp_path_factory: Any
 ) -> Optional[Path]:
     token = os.environ.get(token_env_name)
-    uri = os.environ.get(uri_env_name, "https://dev.neu.ro/api/v1")
+    uri = URL(os.environ.get(uri_env_name, "https://dev.neu.ro"))
+    uri = uri / "api/v1"
     if token is not None:
         log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
-        log.info("Api URL: %s", uri)
+        log.info("Api URL: %s", str(uri))
         config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
-        await login_with_token(token=token, url=URL(uri), path=config_path)
+        await login_with_token(token=token, url=uri, path=config_path)
         return config_path
     else:
         return None
