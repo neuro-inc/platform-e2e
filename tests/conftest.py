@@ -22,7 +22,7 @@ def event_loop() -> asyncio.AbstractEventLoop:
 @pytest_asyncio.fixture(scope="session")
 async def config_path(tmp_path_factory: Any) -> Path:
     path = await ensure_config(
-        "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        "CLIENT_TEST_E2E_USER_NAME", "CLIENT_TEST_E2E_API_URI", tmp_path_factory
     )
 
     if not path:
@@ -39,7 +39,7 @@ async def config_path(tmp_path_factory: Any) -> Path:
 @pytest_asyncio.fixture(scope="session")
 async def config_path_alt(tmp_path_factory: Any) -> Path:
     path = await ensure_config(
-        "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_URI", tmp_path_factory
+        "CLIENT_TEST_E2E_USER_NAME_ALT", "CLIENT_TEST_E2E_API_URI", tmp_path_factory
     )
     if path is None:
         # pytest.skip() actually raises an exception itself

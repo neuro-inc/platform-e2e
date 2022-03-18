@@ -28,7 +28,7 @@ create_user() {
     curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      "${ADMIN_API_URL}/users" -X POST \
+      "${ADMIN_URL}/apis/admin/v1/users" -X POST \
       -d '{"name":"'${NAME}'", "email": "'${NAME}@neu.ro'"}'
     if [[ $? -ne 0 ]]
     then
@@ -51,7 +51,7 @@ add_user_to_cluster() {
       -w "%{http_code}" \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      "${ADMIN_API_URL}/clusters/${CLUSTER_NAME}/users" -X POST \
+      "${ADMIN_URL}/apis/admin/v1/clusters/${CLUSTER_NAME}/users" -X POST \
       -d '{"user_name":"'${NAME}'", "role": "user"}' \
     )"
 
@@ -80,7 +80,7 @@ assign_blob_access() {
       -w "%{http_code}" \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      "${API_URL}/users/${USER_NAME}/permissions" -X POST \
+      "${AUTH_URL}/api/v1/users/${USER_NAME}/permissions" -X POST \
       -d "[{\"uri\": \"blob://${CLUSTER_NAME}\", \"action\": \"write\"}]" \
     )"
     if [ "$HTTP_CODE" -ge "400" ]; then
@@ -103,7 +103,7 @@ user_token() {
     local USER_TOKEN_PAYLOAD=`curl -sS --fail \
       -H 'Accept: application/json' -H 'Content-Type: application/json' \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-      ${API_URL}/users/${NAME}/token -X POST`
+      ${AUTH_URL}/api/v1/users/${NAME}/token -X POST`
     if [ $? -ne 0 ]
     then
       info "Failed"
@@ -129,9 +129,8 @@ usage() {
 
 CLUSTER_NAME=default
 RUN_MODE=native
-API_URL=${CLIENT_TEST_E2E_URI:-https://dev.neu.ro/api/v1}
-APIS_URL=${API_URL/\/api\/v1/\/apis}
-ADMIN_API_URL=$APIS_URL/admin/v1
+AUTH_URL=${CLIENT_TEST_E2E_AUTH_URI:-https://dev.neu.ro}
+ADMIN_URL=${CLIENT_TEST_E2E_ADMIN_URI:-https://dev.neu.ro}
 
 while getopts c:d OPTION; do
   case "$OPTION" in
@@ -191,7 +190,7 @@ then
     info "Run tests in docker image"
     IMAGE_NAME=${IMAGE_NAME:-platform-e2e}
     IMAGE_TAG=${IMAGE_TAG:-latest}
-    DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_URI ${IMAGE_NAME}:${IMAGE_TAG}"
+    DOCKER_CMD="docker run -t -e CLIENT_TEST_E2E_USER_NAME -e CLIENT_TEST_E2E_USER_NAME_ALT -e CLIENT_TEST_E2E_AUTH_URI -e CLIENT_TEST_E2E_ADMIN_URI -e CLIENT_TEST_E2E_API_URI ${IMAGE_NAME}:${IMAGE_TAG}"
     $DOCKER_CMD test
 else
     info "Run tests"
