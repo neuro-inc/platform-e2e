@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 'v4.1.0'
+  rev: 'v4.2.0'
   hooks:
   - id: check-merge-conflict
     exclude: "rst$"
@@ -13,12 +13,12 @@ repos:
   hooks:
   - id: isort
 - repo: https://github.com/psf/black
-  rev: '22.1.0'
+  rev: '22.3.0'
   hooks:
   - id: black
     language_version: python3   # Should be a command that runs python3.6+
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 'v4.1.0'
+  rev: 'v4.2.0'
   hooks:
   - id: check-case-conflict
   - id: check-json
@@ -32,14 +32,14 @@ repos:
   - id: debug-statements
 # Another entry is required to apply file-contents-sorter to another file
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 'v4.1.0'
+  rev: 'v4.2.0'
   hooks:
   - id: file-contents-sorter
     files: |
       docs/spelling_wordlist.txt|
       .gitignore
 - repo: https://github.com/asottile/pyupgrade
-  rev: 'v2.31.0'
+  rev: 'v2.32.0'
   hooks:
   - id: pyupgrade
     args: ['--py36-plus']
@@ -49,12 +49,12 @@ repos:
   - id: flake8
     exclude: "^docs/"
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.6.9
+  rev: v1.6.11
   hooks:
   - id: actionlint-docker
     args: ["-ignore", "SC2155:", "-ignore", "SC2086:", "-ignore", "SC1004:"]
 - repo: https://github.com/sirosen/check-jsonschema
-  rev: 0.14.0
+  rev: 0.14.2
   hooks:
   - id: check-github-actions
 ci:
