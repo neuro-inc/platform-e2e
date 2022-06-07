@@ -39,7 +39,7 @@ repos:
       docs/spelling_wordlist.txt|
       .gitignore
 - repo: https://github.com/asottile/pyupgrade
-  rev: 'v2.32.1'
+  rev: 'v2.34.0'
   hooks:
   - id: pyupgrade
     args: ['--py36-plus']
@@ -54,7 +54,7 @@ repos:
   - id: actionlint-docker
     args: ["-ignore", "SC2155:", "-ignore", "SC2086:", "-ignore", "SC1004:"]
 - repo: https://github.com/sirosen/check-jsonschema
-  rev: 0.15.1
+  rev: 0.16.0
   hooks:
   - id: check-github-actions
 ci:
