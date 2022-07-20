@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Awaitable, Callable, Dict, Optional
 from uuid import uuid4
@@ -17,6 +18,11 @@ log = logging.getLogger(__name__)
 @pytest.fixture(scope="session")
 def event_loop() -> asyncio.AbstractEventLoop:
     return asyncio.get_event_loop()
+
+
+@pytest.fixture(scope="session")
+def cluster_name() -> str:
+    return os.environ["CLUSTER_NAME"]
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -50,19 +56,23 @@ async def config_path_alt(tmp_path_factory: Any) -> Path:
 
 
 @pytest_asyncio.fixture(scope="session")
-async def helper(config_path: Path, tmp_path_factory: Any) -> AsyncIterator[Helper]:
+async def helper(
+    config_path: Path, tmp_path_factory: Any, cluster_name: str
+) -> AsyncIterator[Helper]:
     client = await get(path=config_path)
     print("API URL", client.config.api_url)
+    await client.config.switch_cluster(cluster_name)
     yield Helper(client, tmp_path_factory.mktemp("helper"), config_path)
     await client.close()
 
 
 @pytest_asyncio.fixture(scope="session")
 async def helper_alt(
-    config_path_alt: Path, tmp_path_factory: Any
+    config_path_alt: Path, tmp_path_factory: Any, cluster_name: str
 ) -> AsyncIterator[Helper]:
     client = await get(path=config_path_alt)
     print("Alt API URL", client.config.api_url)
+    await client.config.switch_cluster(cluster_name)
     yield Helper(client, tmp_path_factory.mktemp("helper"), config_path_alt)
     await client.close()
 

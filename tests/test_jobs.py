@@ -21,7 +21,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
             cpu=0.1,
             gpu=None,
             gpu_model=None,
-            memory_mb=200000000000,
+            memory=200000000000 * 10**6,
             shm=True,
             tpu_type=None,
             tpu_software_version=None,

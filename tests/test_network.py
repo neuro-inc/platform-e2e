@@ -23,7 +23,7 @@ INSTALL_CERTIFICATE_COMMAND = (
 )
 JOB_RESOURCES = Resources(
     cpu=0.1,
-    memory_mb=128,  # increase memory for certificate installation
+    memory=128 * 10**6,  # increase memory for certificate installation
     gpu=None,
     gpu_model=None,
     shm=True,
