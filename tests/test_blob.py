@@ -18,7 +18,6 @@ async def test_e2e_blob_storage_upload_download(
     key = "folder/foo"
 
     async with helper.create_tmp_bucket() as tmp_bucket:
-
         # Upload local file
         await helper.upload_blob(bucket_name=tmp_bucket, key=key, file=fname)
 

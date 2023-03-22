@@ -178,15 +178,16 @@ class Helper:
         chunks = []
         while time.monotonic() - started_at < JOB_OUTPUT_TIMEOUT:
             log.info("Monitor %s", job_id)
-            async for chunk in self.client.jobs.monitor(job_id):
-                if not chunk:
-                    break
-                chunks.append(chunk.decode())
-                if re.search(expected, "".join(chunks), re_flags):
-                    return
-                if time.monotonic() - started_at < JOB_OUTPUT_TIMEOUT:
-                    break
-                await asyncio.sleep(JOB_OUTPUT_SLEEP_SECONDS)
+            async with self.client.jobs.monitor(job_id) as it:
+                async for chunk in it:
+                    if not chunk:
+                        break
+                    chunks.append(chunk.decode())
+                    if re.search(expected, "".join(chunks), re_flags):
+                        return
+                    if time.monotonic() - started_at > JOB_OUTPUT_TIMEOUT:
+                        break
+                    await asyncio.sleep(JOB_OUTPUT_SLEEP_SECONDS)
 
         raise AssertionError(
             f"Output of job {job_id} does not satisfy to expected regexp: {expected}"
