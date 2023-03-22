@@ -5,7 +5,8 @@ LABEL org.opencontainers.image.source = "https://github.com/neuro-inc/platform-e
 #Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3-devel jq git && \
+    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3.9 python3-devel jq git && \
+    ln -f /usr/bin/python3.9 /usr/bin/python3 && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
