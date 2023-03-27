@@ -175,9 +175,9 @@ class Helper:
         Wait until job output satisfies given regexp
         """
         started_at = time.monotonic()
-        chunks = []
         while time.monotonic() - started_at < JOB_OUTPUT_TIMEOUT:
             log.info("Monitor %s", job_id)
+            chunks = []
             async with self.client.jobs.monitor(job_id) as it:
                 async for chunk in it:
                     if not chunk:
