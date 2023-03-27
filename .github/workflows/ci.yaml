@@ -21,12 +21,12 @@ jobs:
     - name: Install python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.7"
+        python-version: "3.9"
     - name: Cache packages
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-py-3.7-${{ hashFiles('requirements.txt') }}
+        key: ${{ runner.os }}-py-3.9-${{ hashFiles('requirements.txt') }}
     - name: Install dependencies
       run: make setup
     - name: Lint
@@ -61,7 +61,7 @@ jobs:
     - name: Parse tag
       id: parse_tag
       run: |
-        echo ::set-output name=tag::${GITHUB_REF#refs/tags/v}
+        echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
     - name: Build and push to registry
