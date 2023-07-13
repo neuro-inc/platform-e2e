@@ -35,8 +35,10 @@ test-verbose:
 
 format:
 ifdef CI_LINT_RUN
+	. .venv/bin/activate; \
 	pre-commit run --all-files --show-diff-on-failure
 else
+	. .venv/bin/activate; \
 	pre-commit run --all-files
 endif
 
