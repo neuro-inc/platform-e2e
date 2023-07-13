@@ -40,6 +40,7 @@ jobs:
       run: |
         # Privileged mode is required only if docker-engine use aufs driver for storage
         docker run --privileged -t \
+          -e CLUSTER_NAME \
           -e CLIENT_TEST_E2E_USER_TOKEN \
           -e CLIENT_TEST_E2E_USER_TOKEN_ALT \
           platform-e2e:latest cluster-test
