@@ -13,7 +13,7 @@ endif
 endif
 
 .venv:
-ifndef CI_RUN
+ifndef CI
 	pyenv install --skip-existing
 endif
 	python -m venv .venv
