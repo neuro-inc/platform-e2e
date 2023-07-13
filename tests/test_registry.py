@@ -83,5 +83,4 @@ async def test_registry_is_accessible_by_k8s(
 @pytest.mark.dependency(depends=["pull_tested", "k8s_access_tested"])
 async def test_user_can_remove_image(helper: Helper, image: RemoteImage) -> None:
     digest = await helper.client.images.digest(image)
-    print(image, digest)
     await helper.client.images.rm(image, digest)
