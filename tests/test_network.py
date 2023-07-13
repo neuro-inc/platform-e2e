@@ -1,11 +1,11 @@
 import re
+import uuid
 from typing import Any
 
 import pytest
-
 from neuro_sdk import JobStatus, Resources
-from platform_e2e import Helper
 
+from platform_e2e import Helper
 
 # Clusters created during Platform Infra CI are configured with
 # letsencrypt staging certificates. So we need to install them into
@@ -32,32 +32,8 @@ JOB_RESOURCES = Resources(
 )
 
 
-async def test_connectivity_job_with_http_port(secret_job: Any, helper: Helper) -> None:
-    http_job = await secret_job(True)
-
-    ingress_secret_url = http_job["ingress_url"].with_path("/secret.txt")
-
-    # external ingress test
-    probe = await helper.http_get(ingress_secret_url)
-    assert probe
-    assert probe.strip() == http_job["secret"]
-
-    # internal ingress test
-    command = (
-        f"sh -c '{INSTALL_CERTIFICATE_COMMAND} "
-        f"&& wget -q -T 15 {ingress_secret_url} -O -'"
-    )
-    job = await helper.run_job(
-        "ghcr.io/neuro-inc/alpine:latest",
-        command,
-        description="secret ingress fetcher ",
-        wait_state=JobStatus.SUCCEEDED,
-        resources=JOB_RESOURCES,
-    )
-    await helper.check_job_output(job.id, re.escape(http_job["secret"]))
-
-    # internal network test
-    internal_secret_url = f"http://{http_job['internal_hostname']}/secret.txt"
+async def check_secret_job(helper: Helper, job_url: str, output: str) -> None:
+    internal_secret_url = f"{job_url}/secret.txt"
     command = (
         f"sh -c '{INSTALL_CERTIFICATE_COMMAND} "
         f"&& wget -q -T 15 {internal_secret_url} -O -'"
@@ -69,10 +45,38 @@ async def test_connectivity_job_with_http_port(secret_job: Any, helper: Helper) 
         wait_state=JobStatus.SUCCEEDED,
         resources=JOB_RESOURCES,
     )
-    await helper.check_job_output(job.id, re.escape(http_job["secret"]))
+
+    await helper.check_job_output(job.id, re.escape(output))
 
 
-async def test_connectivity_job_without_http_port(
+async def test_job_internal_connectivity(secret_job: Any, helper: Helper) -> None:
+    http_job = await secret_job(False, name=f"secret-{str(uuid.uuid4())[:8]}")
+
+    await check_secret_job(
+        helper, f"http://{http_job['internal_hostname']}", http_job["secret"]
+    )
+    await check_secret_job(
+        helper, f"http://{http_job['internal_hostname_named']}", http_job["secret"]
+    )
+
+
+async def test_job_with_http_port_external_connectivity(
+    secret_job: Any, helper: Helper
+) -> None:
+    http_job = await secret_job(True)
+
+    ingress_secret_url = http_job["ingress_url"].with_path("/secret.txt")
+
+    # external ingress test
+    probe = await helper.http_get(ingress_secret_url)
+    assert probe
+    assert probe.strip() == http_job["secret"]
+
+    # internal ingress test
+    await check_secret_job(helper, http_job["ingress_url"], http_job["secret"])
+
+
+async def test_job_without_http_port_external_connectivity(
     secret_job: Any, helper: Helper
 ) -> None:
     # run http job for getting url
@@ -98,57 +102,15 @@ async def test_connectivity_job_without_http_port(
     assert probe
     assert probe.strip() != no_http_job["secret"]
 
-    # internal network test
-
-    command = (
-        f"sh -c '{INSTALL_CERTIFICATE_COMMAND} && "
-        f"wget -q -T 15 {internal_secret_url} -O - | grep {no_http_job['secret']}'"
-    )
-    # This job must succeed
-    await helper.run_job(
-        "ghcr.io/neuro-inc/alpine:latest",
-        command,
-        description="secret internal network fetcher ",
-        wait_state=JobStatus.SUCCEEDED,
-        resources=JOB_RESOURCES,
-    )
-
 
 @pytest.mark.network_isolation
-async def test_check_isolation(secret_job: Any, helper_alt: Helper) -> None:
+async def test_job_isolation(secret_job: Any, helper_alt: Helper) -> None:
     http_job = await secret_job(True)
 
-    ingress_secret_url = f"{http_job['ingress_url']}/secret.txt"
-    ingress_secret_url
-
     # internal ingress test
-    command = (
-        f"sh -c '{INSTALL_CERTIFICATE_COMMAND} "
-        f"&& wget -q -T 15 {ingress_secret_url} -O -'"
-    )
-    job = await helper_alt.run_job(
-        "ghcr.io/neuro-inc/alpine:latest",
-        command,
-        description="secret ingress fetcher ",
-        wait_state=JobStatus.SUCCEEDED,
-        resources=JOB_RESOURCES,
-    )
-    await helper_alt.check_job_output(job.id, re.escape(http_job["secret"]))
+    await check_secret_job(helper_alt, http_job["ingress_url"], http_job["secret"])
 
     # internal network test
-
-    internal_secret_url = f"http://{http_job['internal_hostname']}/secret.txt"
-    command = (
-        f"sh -c '{INSTALL_CERTIFICATE_COMMAND} && "
-        f"wget -q -T 15 {internal_secret_url} -O -'"
+    await check_secret_job(
+        helper_alt, f"http://{http_job['internal_hostname']}", "timed out"
     )
-    # This job must fail
-    job = await helper_alt.run_job(
-        "ghcr.io/neuro-inc/alpine:latest",
-        command,
-        description="secret internal network fetcher ",
-        wait_state=JobStatus.FAILED,
-        resources=JOB_RESOURCES,
-    )
-
-    await helper_alt.check_job_output(job.id, r"timed out")

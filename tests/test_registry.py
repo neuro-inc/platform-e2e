@@ -7,10 +7,9 @@ from uuid import uuid4 as uuid
 
 import pytest
 import pytest_asyncio
-
 from neuro_sdk import JobStatus, RemoteImage, ResourceNotFound
-from platform_e2e import Helper, shell
 
+from platform_e2e import Helper, shell
 
 log = logging.getLogger(__name__)
 
@@ -39,8 +38,8 @@ async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
         name="platform-e2e",
         tag=str(uuid()),
         registry=helper.registry.host,
-        owner=helper.username,
         cluster_name=helper.cluster_name,
+        project_name=helper.project_name,
     )
     with _build_image(image):
         yield image
@@ -84,4 +83,5 @@ async def test_registry_is_accessible_by_k8s(
 @pytest.mark.dependency(depends=["pull_tested", "k8s_access_tested"])
 async def test_user_can_remove_image(helper: Helper, image: RemoteImage) -> None:
     digest = await helper.client.images.digest(image)
+    print(image, digest)
     await helper.client.images.rm(image, digest)

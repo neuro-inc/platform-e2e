@@ -9,12 +9,10 @@ import time
 from contextlib import asynccontextmanager, contextmanager
 from hashlib import sha1
 from pathlib import Path
-from typing import Any, AsyncIterator, Iterator, List, Optional, Union
+from typing import Any, AsyncIterator, Callable, Iterator, List, Optional, Union
 from uuid import uuid4
 
 import aiohttp
-from yarl import URL
-
 from neuro_sdk import (
     CONFIG_ENV_NAME,
     Client,
@@ -26,7 +24,7 @@ from neuro_sdk import (
     Volume,
     login_with_token,
 )
-
+from yarl import URL
 
 JOB_OUTPUT_TIMEOUT = 60 * 5
 JOB_OUTPUT_SLEEP_SECONDS = 2
@@ -42,7 +40,7 @@ class Helper:
         self._tmpstorage = URL.build(
             scheme="storage",
             host=client.cluster_name,
-            path=f"/{client.username}/{str(uuid4())}/",
+            path=f"/{client.config.project_name_or_raise}/{str(uuid4())}/",
         )
         self._has_root_storage = False
 
@@ -65,6 +63,10 @@ class Helper:
     @property
     def cluster_name(self) -> str:
         return self._client.cluster_name
+
+    @property
+    def project_name(self) -> str:
+        return self._client.config.project_name_or_raise
 
     @property
     def config_path(self) -> Path:
@@ -327,16 +329,13 @@ class Helper:
 
 
 async def ensure_config(
-    token_env_name: str, uri_env_name: str, tmp_path_factory: Any
+    token: str, url: URL, tmp_path_factory: Callable[[], Path]
 ) -> Optional[Path]:
-    token = os.environ.get(token_env_name)
-    uri = URL(os.environ.get(uri_env_name, "https://dev.neu.ro"))
-    uri = uri / "api/v1"
     if token is not None:
-        log.info("Used token from env %s: %s", token_env_name, token[:8] + "...")
-        log.info("Api URL: %s", str(uri))
-        config_path = tmp_path_factory.mktemp(token_env_name.lower()) / ".nmrc"
-        await login_with_token(token=token, url=uri, path=config_path)
+        log.info("Api URL: %s", str(url))
+        log.info("Token: %s", token[:8] + "...")
+        config_path = tmp_path_factory() / ".nmrc"
+        await login_with_token(token=token, url=url, path=config_path)
         return config_path
     else:
         return None
