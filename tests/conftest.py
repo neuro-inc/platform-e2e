@@ -1,18 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import hashlib
 import logging
 import os
 from pathlib import Path
-from typing import (
-    Any,
-    AsyncIterator,
-    Awaitable,
-    Callable,
-    Dict,
-    Iterator,
-    Optional,
-    Protocol,
-)
+from typing import Any, AsyncIterator, Awaitable, Callable, Iterator, Protocol
 from uuid import uuid4
 
 import pytest
@@ -48,8 +41,10 @@ def auth_url(url: URL) -> URL:
 
 
 @pytest.fixture(scope="session")
-async def auth_client(auth_url: URL, admin_token: str) -> AsyncIterator[AuthClient]:
-    async with AuthClient(auth_url, admin_token) as client:
+async def auth_client(
+    auth_url: URL, admin_token: str | None
+) -> AsyncIterator[AuthClient]:
+    async with AuthClient(auth_url, admin_token or "") as client:
         yield client
 
 
@@ -61,7 +56,9 @@ def admin_url(url: URL) -> URL:
 
 
 @pytest.fixture(scope="session")
-async def admin_client(admin_url: URL, admin_token: str) -> AsyncIterator[AdminClient]:
+async def admin_client(
+    admin_url: URL, admin_token: str | None
+) -> AsyncIterator[AdminClient]:
     async with AdminClient(base_url=admin_url, service_token=admin_token) as client:
         yield client
 
@@ -74,8 +71,8 @@ def api_url(url: URL) -> URL:
 
 
 @pytest.fixture(scope="session")
-def admin_token() -> str:
-    return os.environ["CLIENT_TEST_E2E_ADMIN_TOKEN"]
+def admin_token() -> str | None:
+    return os.environ.get("CLIENT_TEST_E2E_ADMIN_TOKEN")
 
 
 class UserFactory(Protocol):
@@ -304,13 +301,13 @@ async def kill_later(helper: Helper) -> AsyncIterator[Callable[[str], None]]:
 @pytest.fixture
 def secret_job(
     helper: Helper, kill_later: Callable[[str], None]
-) -> Callable[..., Awaitable[Dict[str, Any]]]:
+) -> Callable[..., Awaitable[dict[str, Any]]]:
     async def _run(
         http_port: bool,
         http_auth: bool = False,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        name: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
         secret = str(uuid4())
         # Run http job
         command = (
@@ -318,7 +315,7 @@ def secret_job(
             f"timeout 15m /usr/sbin/nginx -g 'daemon off;'\""
         )
         if http_port:
-            http: Optional[HTTPPort] = HTTPPort(80, http_auth)
+            http: HTTPPort | None = HTTPPort(80, http_auth)
         else:
             http = None
         if not description:
