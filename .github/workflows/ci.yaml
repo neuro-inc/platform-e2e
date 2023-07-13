@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLUSTER_NAME: default
-      CLIENT_TEST_E2E_USER_TOKEN: ${{ secrets.CLIENT_TEST_E2E_USER_NAME }}
-      CLIENT_TEST_E2E_USER_TOKEN_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_NAME_ALT }}
+      CLIENT_TEST_E2E_USER_TOKEN: ${{ secrets.CLIENT_TEST_E2E_USER_TOKEN }}
+      CLIENT_TEST_E2E_USER_TOKEN_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_TOKEN_ALT }}
     steps:
     - name: Checkout commit
       uses: actions/checkout@v3
