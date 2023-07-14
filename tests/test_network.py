@@ -32,30 +32,35 @@ JOB_RESOURCES = Resources(
 )
 
 
-async def check_secret_job(helper: Helper, job_url: str, output: str) -> None:
-    internal_secret_url = f"{job_url}/secret.txt"
+async def run_fetch_secret_job(
+    helper: Helper,
+    secret_job_url: str,
+    fetch_output: str,
+    fetch_wait_state: JobStatus = JobStatus.SUCCEEDED,
+) -> None:
+    internal_secret_url = f"{secret_job_url}/secret.txt"
     command = (
         f"sh -c '{INSTALL_CERTIFICATE_COMMAND} "
         f"&& wget -q -T 15 {internal_secret_url} -O -'"
     )
-    job = await helper.run_job(
+    fetch_job = await helper.run_job(
         "ghcr.io/neuro-inc/alpine:latest",
         command,
-        description="secret internal network fetcher ",
-        wait_state=JobStatus.SUCCEEDED,
+        description="e2e tests: fetch secret job",
+        wait_state=fetch_wait_state,
         resources=JOB_RESOURCES,
     )
 
-    await helper.check_job_output(job.id, re.escape(output))
+    await helper.check_job_output(fetch_job.id, re.escape(fetch_output))
 
 
 async def test_job_internal_connectivity(secret_job: Any, helper: Helper) -> None:
     http_job = await secret_job(False, name=f"secret-{str(uuid.uuid4())[:8]}")
 
-    await check_secret_job(
+    await run_fetch_secret_job(
         helper, f"http://{http_job['internal_hostname']}", http_job["secret"]
     )
-    await check_secret_job(
+    await run_fetch_secret_job(
         helper, f"http://{http_job['internal_hostname_named']}", http_job["secret"]
     )
 
@@ -73,7 +78,7 @@ async def test_job_with_http_port_external_connectivity(
     assert probe.strip() == http_job["secret"]
 
     # internal ingress test
-    await check_secret_job(helper, http_job["ingress_url"], http_job["secret"])
+    await run_fetch_secret_job(helper, http_job["ingress_url"], http_job["secret"])
 
 
 async def test_job_without_http_port_external_connectivity(
@@ -108,9 +113,12 @@ async def test_job_isolation(secret_job: Any, helper_alt: Helper) -> None:
     http_job = await secret_job(True)
 
     # internal ingress test
-    await check_secret_job(helper_alt, http_job["ingress_url"], http_job["secret"])
+    await run_fetch_secret_job(helper_alt, http_job["ingress_url"], http_job["secret"])
 
     # internal network test
-    await check_secret_job(
-        helper_alt, f"http://{http_job['internal_hostname']}", "timed out"
+    await run_fetch_secret_job(
+        helper_alt,
+        f"http://{http_job['internal_hostname']}",
+        "timed out",
+        fetch_wait_state=JobStatus.FAILED,
     )
