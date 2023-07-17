@@ -7,10 +7,9 @@ from uuid import uuid4 as uuid
 
 import pytest
 import pytest_asyncio
-
 from neuro_sdk import JobStatus, RemoteImage, ResourceNotFound
-from platform_e2e import Helper, shell
 
+from platform_e2e import Helper, shell
 
 log = logging.getLogger(__name__)
 
@@ -39,8 +38,8 @@ async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
         name="platform-e2e",
         tag=str(uuid()),
         registry=helper.registry.host,
-        owner=helper.username,
         cluster_name=helper.cluster_name,
+        project_name=helper.project_name,
     )
     with _build_image(image):
         yield image

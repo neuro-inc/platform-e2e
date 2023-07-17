@@ -1,12 +1,9 @@
-FROM fedora:31
+FROM fedora:33
 
 LABEL org.opencontainers.image.source = "https://github.com/neuro-inc/platform-e2e"
 
-#Based on https://developers.redhat.com/blog/2019/08/14/best-practices-for-running-buildah-in-a-container/
-
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman buildah python3 make gcc python3.9 python3-devel jq git && \
-    ln -f /usr/bin/python3.9 /usr/bin/python3 && \
+    dnf install -y --exclude container-selinux podman-2.1.1-10.fc33 make && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
@@ -14,26 +11,32 @@ RUN rm -rf  /var/lib/containers/ && \
     podman info && \
     ln -s /usr/bin/podman /usr/bin/docker
 
+ENV BUILDAH_FORMAT=docker
 
 # clusters created during CI process use letsencrypt staging environment
 # install letsencrypt staging environment certificate to trust store
 RUN curl -o /etc/pki/ca-trust/source/anchors/letsencrypt-stg-root-x1.pem https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem \
     && update-ca-trust
 
+WORKDIR /app
 
-RUN python3 -m venv /venv
-ENV PATH=/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/root/.local/bin:$PATH
 
-WORKDIR /platform-e2e
+RUN python3 -m ensurepip --upgrade
+RUN python3 -m venv .venv
+RUN . .venv/bin/activate && pip install -U pip
 
-COPY setup.py setup.py
+COPY setup.cfg setup.cfg
+COPY pyproject.toml pyproject.toml
 
-RUN pip install -U pip setuptools
+RUN . .venv/bin/activate && pip install .
 
-COPY . /platform-e2e
+COPY platform_e2e platform_e2e
 
-RUN pip install .[dev]
+RUN . .venv/bin/activate && pip install .
 
-ENV BUILDAH_FORMAT=docker
+COPY tests tests
+COPY scripts scripts
+COPY Makefile Makefile
 
 ENTRYPOINT ["/usr/bin/make"]

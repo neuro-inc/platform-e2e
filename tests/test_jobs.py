@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Callable
 from uuid import uuid4
 
+from neuro_sdk import JobStatus, Resources, Volume
 from yarl import URL
 
-from neuro_sdk import JobStatus, Resources, Volume
 from platform_e2e import Helper
 
 

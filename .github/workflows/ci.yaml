@@ -3,30 +3,29 @@ name: CI
 on:
   push:
     branches: [master]
-    tags: ['v*']
+    tags: ["v*"]
   pull_request:
     branches: [master]
   schedule:
   - cron: 0 4 * * *
+
 jobs:
   test:
     name: Run tests
     runs-on: ubuntu-latest
     env:
-      CLIENT_TEST_E2E_USER_NAME: ${{ secrets.CLIENT_TEST_E2E_USER_NAME }}
-      CLIENT_TEST_E2E_USER_NAME_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_NAME_ALT }}
+      CLUSTER_NAME: default
+      CLIENT_TEST_E2E_USER_TOKEN: ${{ secrets.CLIENT_TEST_E2E_USER_TOKEN }}
+      CLIENT_TEST_E2E_USER_TOKEN_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_TOKEN_ALT }}
     steps:
     - name: Checkout commit
       uses: actions/checkout@v3
     - name: Install python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.9"
-    - name: Cache packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-py-3.9-${{ hashFiles('requirements.txt') }}
+        python-version-file: .python-version
+        cache: "pip"
+        cache-dependency-path: setup.cfg
     - name: Install dependencies
       run: make setup
     - name: Lint
@@ -36,14 +35,21 @@ jobs:
       env:
         CI_LINT_RUN: 1
     - name: Build image
-      run: make build
+      run: make docker-build
     - name: Run tests
       run: |
         # Privileged mode is required only if docker-engine use aufs driver for storage
         docker run --privileged -t \
-          -e CLIENT_TEST_E2E_USER_NAME \
-          -e CLIENT_TEST_E2E_USER_NAME_ALT \
+          -e CLUSTER_NAME \
+          -e CLIENT_TEST_E2E_USER_TOKEN \
+          -e CLIENT_TEST_E2E_USER_TOKEN_ALT \
           platform-e2e:latest cluster-test
+    - name: Upload image artifact
+      uses: neuro-inc/upload-image-action@v21.9.2
+      with:
+        image: platform-e2e
+        token: ${{ github.token }}
+
   release:
     name: Release package
     runs-on: ubuntu-latest
@@ -52,25 +58,25 @@ jobs:
     steps:
     - name: Checkout commit
       uses: actions/checkout@v3
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2
+    - name: Purge old artifacts
+      uses: kolpav/purge-artifacts-action@v1
+      with:
+        token: ${{ github.token }}
+        expire-in: 30mins
+    - name: Login to ghcr.io
+      uses: docker/login-action@v2.2.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Parse tag
-      id: parse_tag
-      run: |
-        echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    - name: Build and push to registry
-      uses: docker/build-push-action@v4
-      env:
-        IMAGE_REPO: ghcr.io/neuro-inc/platform-e2e
+        password: ${{ github.token }}
+    - name: Download image artifact
+      uses: actions/download-artifact@v3
       with:
-        context: "."
-        push: true
-        tags: |
-          ${{ env.IMAGE_REPO }}:${{ steps.parse_tag.outputs.tag }}
-          ${{ env.IMAGE_REPO }}:latest
+        name: image
+    - name: Push image
+      run: |
+        docker load --input platform-e2e.tar
+        TAG=${GITHUB_REF#refs/tags/v}
+        docker tag platform-e2e:latest ghcr.io/neuro-inc/platform-e2e:$TAG
+        docker tag platform-e2e:latest ghcr.io/neuro-inc/platform-e2e:latest
+        docker push ghcr.io/neuro-inc/platform-e2e
