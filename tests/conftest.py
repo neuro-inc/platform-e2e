@@ -194,9 +194,8 @@ async def config_path(
     path = await ensure_config(
         user_token, api_url, lambda: tmp_path_factory.mktemp(user_name)
     )
-    LOGGER.info("User %s config file was not created", user_name)
-
     if not path:
+        LOGGER.info("User %s config file was not created", user_name)
         path = Path(DEFAULT_CONFIG_PATH).expanduser()
         if not path.exists():
             raise RuntimeError(f"Config file({path}) not found ")
