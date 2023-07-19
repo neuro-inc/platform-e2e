@@ -36,7 +36,7 @@ def url() -> URL:
 @pytest.fixture(scope="session")
 def auth_url(url: URL) -> URL:
     if "CLIENT_TEST_E2E_AUTH_URI" in os.environ:
-        return URL(os.environ["CLIENT_TEST_E2E_AUTH_URI"])
+        url = URL(os.environ["CLIENT_TEST_E2E_AUTH_URI"])
     return url
 
 
@@ -66,7 +66,7 @@ async def admin_client(
 @pytest.fixture(scope="session")
 def api_url(url: URL) -> URL:
     if "CLIENT_TEST_E2E_API_URI" in os.environ:
-        return URL(os.environ["CLIENT_TEST_E2E_API_URI"])
+        url = URL(os.environ["CLIENT_TEST_E2E_API_URI"])
     return url.with_path("api/v1")
 
 
