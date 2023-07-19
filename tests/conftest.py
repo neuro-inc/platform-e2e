@@ -232,6 +232,7 @@ async def helper(
         await client._admin.create_project(
             project_name, cluster_name=cluster_name, org_name=None
         )
+        await client.config.fetch()
     except Exception as ex:
         LOGGER.info("Project creation failed: %s", ex)
         # Check project exists
@@ -264,6 +265,7 @@ async def helper_alt(
             org_name=None,
             user_name=user_name_alt,
         )
+        await client.config.fetch()
     except Exception as ex:
         LOGGER.info("Project user %s creation failed: %s", user_name, ex)
         # Check project user exists
@@ -274,7 +276,7 @@ async def helper_alt(
             user_name=user_name_alt,
         )
     await client.config.switch_project(project_name)
-    yield Helper(client, tmp_path_factory.mktemp("helper"), config_path_alt)
+    yield Helper(client, tmp_path_factory.mktemp("helper_alt"), config_path_alt)
     await client.close()
 
 
