@@ -38,10 +38,10 @@ async def run_fetch_secret_job(
     fetch_output: str,
     fetch_wait_state: JobStatus = JobStatus.SUCCEEDED,
 ) -> None:
-    internal_secret_url = f"{secret_job_url}/secret.txt"
+    secret_job_url = f"{secret_job_url}/secret.txt"
     command = (
         f"sh -c '{INSTALL_CERTIFICATE_COMMAND} "
-        f"&& wget -q -T 15 {internal_secret_url} -O -'"
+        f"&& wget -q -T 15 {secret_job_url} -O -'"
     )
     fetch_job = await helper.run_job(
         "ghcr.io/neuro-inc/alpine:latest",
