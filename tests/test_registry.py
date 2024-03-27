@@ -32,7 +32,7 @@ def _build_image(image: RemoteImage) -> Iterator[None]:
     shell(f"docker rmi {image_url}")
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
     image = RemoteImage(
         name="platform-e2e",
