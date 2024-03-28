@@ -6,7 +6,6 @@ from typing import Any, AsyncIterator, Iterator
 from uuid import uuid4 as uuid
 
 import pytest
-import pytest_asyncio
 from neuro_sdk import JobStatus, RemoteImage, ResourceNotFound
 
 from platform_e2e import Helper, shell
@@ -32,7 +31,7 @@ def _build_image(image: RemoteImage) -> Iterator[None]:
     shell(f"docker rmi {image_url}")
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
     image = RemoteImage(
         name="platform-e2e",

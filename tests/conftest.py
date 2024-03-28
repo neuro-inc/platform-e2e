@@ -9,7 +9,6 @@ from typing import Any, AsyncIterator, Awaitable, Callable, Iterator, Protocol
 from uuid import uuid4
 
 import pytest
-import pytest_asyncio
 from jose import jwt
 from neuro_admin_client import AdminClient, ClusterUserRoleType
 from neuro_auth_client import AuthClient
@@ -140,12 +139,7 @@ def _get_user_name_from_token(token: str) -> str:
 
 
 @pytest.fixture(scope="session")
-async def project_name(cluster_name: str) -> str:
-    return f"neuro-e2e-{_hash(cluster_name)}"
-
-
-@pytest.fixture(scope="session")
-async def user_name(cluster_name: str) -> str:
+def user_name(cluster_name: str) -> str:
     if "CLIENT_TEST_E2E_USER_TOKEN" in os.environ:
         token = os.environ["CLIENT_TEST_E2E_USER_TOKEN"]
         return _get_user_name_from_token(token)
@@ -164,7 +158,7 @@ async def user_token(
 
 
 @pytest.fixture(scope="session")
-async def user_name_alt(cluster_name: str) -> str:
+def user_name_alt(cluster_name: str) -> str:
     if "CLIENT_TEST_E2E_USER_TOKEN_ALT" in os.environ:
         token = os.environ["CLIENT_TEST_E2E_USER_TOKEN_ALT"]
         return _get_user_name_from_token(token)
@@ -184,7 +178,7 @@ async def user_token_alt(
     return user_token
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def config_path(
     tmp_path_factory: Any,
     api_url: URL,
@@ -203,7 +197,7 @@ async def config_path(
     return path
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def config_path_alt(
     tmp_path_factory: Any, api_url: URL, user_name_alt: str, user_token_alt: str
 ) -> Path:
@@ -218,16 +212,17 @@ async def config_path_alt(
         return path
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def helper(
     config_path: Path,
     tmp_path_factory: Any,
     cluster_name: str,
-    project_name: str,
+    user_name: str,
 ) -> AsyncIterator[Helper]:
     client = await get(path=config_path)
     print("API URL", client.config.api_url)
     await client.config.switch_cluster(cluster_name)
+    project_name = f"{user_name}-default"
     try:
         await client._admin.create_project(
             project_name, cluster_name=cluster_name, org_name=None
@@ -246,34 +241,29 @@ async def helper(
     await client.close()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def helper_alt(
     config_path_alt: Path,
     tmp_path_factory: Any,
-    helper: Helper,
     cluster_name: str,
-    project_name: str,
     user_name_alt: str,
 ) -> AsyncIterator[Helper]:
     client = await get(path=config_path_alt)
     print("Alt API URL", client.config.api_url)
     await client.config.switch_cluster(cluster_name)
+    project_name = f"{user_name_alt}-default"
     try:
-        await helper.client._admin.create_project_user(
-            project_name=project_name,
-            cluster_name=cluster_name,
-            org_name=None,
-            user_name=user_name_alt,
+        await client._admin.create_project(
+            project_name, cluster_name=cluster_name, org_name=None
         )
         await client.config.fetch()
     except Exception as ex:
         LOGGER.info("Project user %s creation failed: %s", user_name, ex)
         # Check project user exists
-        await helper.client._admin.get_project_user(
+        await client._admin.get_project(
             project_name=project_name,
             cluster_name=cluster_name,
             org_name=None,
-            user_name=user_name_alt,
         )
     await client.config.switch_project(project_name)
     yield Helper(client, tmp_path_factory.mktemp("helper_alt"), config_path_alt)
