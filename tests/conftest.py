@@ -12,7 +12,14 @@ import pytest
 from jose import jwt
 from neuro_admin_client import AdminClient, ClusterUserRoleType
 from neuro_auth_client import AuthClient
-from neuro_sdk import DEFAULT_CONFIG_PATH, HTTPPort, JobStatus, ResourceNotFound, get
+from neuro_sdk import (
+    DEFAULT_CONFIG_PATH,
+    HTTPPort,
+    JobStatus,
+    ResourceNotFound,
+    Resources,
+    get,
+)
 from yarl import URL
 
 from platform_e2e import Helper, ensure_config
@@ -321,6 +328,11 @@ def secret_job(
             name=name,
             description=description,
             http=http,
+            resources=Resources(
+                cpu=0.1,
+                memory=256 * 10**6,
+                shm=True,
+            ),
         )
         kill_later(job.id)
         return {
