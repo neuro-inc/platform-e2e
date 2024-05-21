@@ -49,7 +49,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
     else:
         raise AssertionError(f"Timeout {job.id}: {job.status}")
 
-    assert job.history.reason == "Job will not fit into cluster"
+    assert job.history.reason == "Job cannot be scheduled"
     assert job.history.description == "The job could not be started."
     # Check that it is not in a running job list anymore
     jobs = [
