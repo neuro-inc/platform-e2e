@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import logging
 import os
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from pathlib import Path
 from typing import Any, Protocol
 from uuid import uuid4
@@ -26,13 +25,6 @@ from yarl import URL
 from platform_e2e import Helper, ensure_config
 
 LOGGER = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session")
