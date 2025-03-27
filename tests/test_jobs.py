@@ -1,7 +1,7 @@
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Callable
 from uuid import uuid4
 
 from apolo_sdk import JobStatus, Resources, Volume

@@ -1,8 +1,9 @@
 import logging
 import re
+from collections.abc import AsyncIterator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, AsyncIterator, Iterator
+from typing import Any
 from uuid import uuid4 as uuid
 
 import pytest

@@ -1,14 +1,14 @@
 FROM fedora:41
 
-LABEL org.opencontainers.image.source = "https://github.com/neuro-inc/platform-e2e"
+LABEL org.opencontainers.image.source="https://github.com/neuro-inc/platform-e2e"
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman-2.1.1-10.fc33 make && \
+    dnf install -y --exclude container-selinux podman make && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
-    sed -i -e 's/driver = "overlay"/driver = "vfs"/' -e 's/mountopt = /#mountopt = /' /etc/containers/storage.conf && \
-    podman info && \
+    sed -i -e 's/driver = "overlay"/driver = "vfs"/' -e 's/mountopt = /#mountopt = /' /usr/share/containers/storage.conf && \
+#    podman info && \
     ln -s /usr/bin/podman /usr/bin/docker
 
 ENV BUILDAH_FORMAT=docker
