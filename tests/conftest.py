@@ -4,8 +4,9 @@ import asyncio
 import hashlib
 import logging
 import os
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from pathlib import Path
-from typing import Any, AsyncIterator, Awaitable, Callable, Iterator, Protocol
+from typing import Any, Protocol
 from uuid import uuid4
 
 import pytest

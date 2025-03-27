@@ -1,7 +1,7 @@
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Callable
 from uuid import uuid4
 
 from apolo_sdk import JobStatus, Resources, Volume
@@ -19,12 +19,7 @@ async def test_unschedulable_job_lifecycle(helper: Helper) -> None:
         command,
         resources=Resources(
             cpu=0.1,
-            gpu=None,
-            gpu_model=None,
             memory=200000000000 * 10**6,
-            shm=True,
-            tpu_type=None,
-            tpu_software_version=None,
         ),
         wait_state=JobStatus.PENDING,
         schedule_timeout=15,

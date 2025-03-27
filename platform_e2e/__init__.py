@@ -6,10 +6,11 @@ import re
 import secrets
 import subprocess
 import time
+from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from hashlib import sha1
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Iterator, List, Optional, Union
+from typing import Any
 from uuid import uuid4
 
 import aiohttp
@@ -81,26 +82,21 @@ class Helper:
     async def run_job(
         self,
         image: str,
-        command: Optional[str] = None,
+        command: str | None = None,
         *,
-        description: Optional[str] = None,
+        description: str | None = None,
         wait_state: JobStatus = JobStatus.RUNNING,
-        http: Optional[HTTPPort] = None,
-        resources: Optional[Resources] = None,
-        name: Optional[str] = None,
-        volumes: Optional[List[Volume]] = None,
-        schedule_timeout: Optional[float] = None,
+        http: HTTPPort | None = None,
+        resources: Resources | None = None,
+        name: str | None = None,
+        volumes: list[Volume] | None = None,
+        schedule_timeout: float | None = None,
         wait_timeout: int = 180,
     ) -> JobDescription:
         if resources is None:
             resources = Resources(
                 cpu=0.1,
-                gpu=None,
-                gpu_model=None,
                 memory=128 * 10**6,
-                shm=True,
-                tpu_software_version=None,
-                tpu_type=None,
             )
         if volumes is None:
             volumes = []
@@ -299,9 +295,7 @@ class Helper:
         await self.cleanup_bucket(name)
         await self.delete_bucket(name)
 
-    async def upload_blob(
-        self, bucket_name: str, key: str, file: Union[Path, str]
-    ) -> None:
+    async def upload_blob(self, bucket_name: str, key: str, file: Path | str) -> None:
         await self.client.buckets.upload_file(
             URL("file:" + str(file)), URL(f"blob:{bucket_name}/{key}")
         )
@@ -319,7 +313,7 @@ class Helper:
         )
         assert self.hash_hex(tmp_path) == checksum, "checksum test failed for {url}"
 
-    def hash_hex(self, file: Union[str, Path]) -> str:
+    def hash_hex(self, file: str | Path) -> str:
         _hash = sha1()
         with open(file, "rb") as f:
             for block in iter(lambda: f.read(16 * 1024 * 1024), b""):
@@ -330,7 +324,7 @@ class Helper:
 
 async def ensure_config(
     token: str, url: URL, tmp_path_factory: Callable[[], Path]
-) -> Optional[Path]:
+) -> Path | None:
     if token is not None:
         log.info("Api URL: %s", str(url))
         log.info("Token: %s", token[:8] + "...")
@@ -347,8 +341,7 @@ def shell(cmd: str, timeout: float = 300) -> str:
         cmd,
         shell=True,
         timeout=timeout,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     if result.returncode != os.EX_OK:
         raise SystemError(
