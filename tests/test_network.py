@@ -3,7 +3,7 @@ import uuid
 from typing import Any
 
 import pytest
-from neuro_sdk import JobStatus, Resources
+from apolo_sdk import JobStatus, Resources
 
 from platform_e2e import Helper
 
