@@ -45,7 +45,7 @@ jobs:
             -e CLIENT_TEST_E2E_USER_TOKEN_ALT \
             platform-e2e:latest cluster-test
       - name: Upload image artifact
-        uses: neuro-inc/upload-image-action@v21.9.2
+        uses: neuro-inc/upload-image-action@v21.9.3
         with:
           image: platform-e2e
           token: ${{ github.token }}
