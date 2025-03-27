@@ -1,4 +1,3 @@
-
 TEST_OPTS = $(PYTEST_OPTS) --durations 10 --timeout 300 --verbose
 
 ifdef SKIP_NETWORK_ISOLATION_TEST
@@ -49,7 +48,7 @@ lint: format
 docker-build:
 	docker build -t platform-e2e:latest .
 
-DOCKER_CMD := docker run -t --rm -e CLUSTER_NAME -e CLIENT_TEST_E2E_ADMIN_TOKEN -e CLIENT_TEST_E2E_USER_TOKEN -e CLIENT_TEST_E2E_USER_TOKEN_ALT -e CLIENT_TEST_E2E_AUTH_URI -e CLIENT_TEST_E2E_ADMIN_URI -e CLIENT_TEST_E2E_API_URI platform-e2e:latest
+DOCKER_CMD := docker run --privileged -t --rm -e CLUSTER_NAME -e CLIENT_TEST_E2E_ADMIN_TOKEN -e CLIENT_TEST_E2E_USER_TOKEN -e CLIENT_TEST_E2E_USER_TOKEN_ALT -e CLIENT_TEST_E2E_AUTH_URI -e CLIENT_TEST_E2E_ADMIN_URI -e CLIENT_TEST_E2E_API_URI platform-e2e:latest
 
 docker-test:
 	@$(DOCKER_CMD) test
