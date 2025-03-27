@@ -14,9 +14,9 @@ make cluster-test
 
 ## Platform URI variables
 
-- CLIENT_TEST_E2E_AUTH_URI, default `https://dev.neu.ro`
-- CLIENT_TEST_E2E_ADMIN_URI, default `https://dev.neu.ro`
-- CLIENT_TEST_E2E_API_URI, default `https://dev.neu.ro`
+- CLIENT_TEST_E2E_AUTH_URI, default `https://api.dev.apolo.us`
+- CLIENT_TEST_E2E_ADMIN_URI, default `https://api.dev.apolo.us`
+- CLIENT_TEST_E2E_API_URI, default `https://api.dev.apolo.us`
 
 ## Existing user token variables
 
@@ -38,6 +38,7 @@ How to run:
 docker run --rm -t \
     -e CLIENT_TEST_E2E_USER_TOKEN \
     -e CLIENT_TEST_E2E_USER_TOKEN_ALT \
+    -e CLIENT_TEST_E2E_ADMIN_TOKEN \
     -e CLUSTER_NAME \
     platform-e2e \
     cluster-test

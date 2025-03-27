@@ -36,7 +36,7 @@ def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 
 @pytest.fixture(scope="session")
 def url() -> URL:
-    return URL(os.environ.get("CLIENT_TEST_E2E_URI", "https://dev.neu.ro"))
+    return URL(os.environ.get("CLIENT_TEST_E2E_URI", "https://api.dev.apolo.us"))
 
 
 @pytest.fixture(scope="session")

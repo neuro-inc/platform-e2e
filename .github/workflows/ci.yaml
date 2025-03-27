@@ -45,7 +45,7 @@ jobs:
             -e CLIENT_TEST_E2E_USER_TOKEN_ALT \
             platform-e2e:latest cluster-test
       - name: Upload image artifact
-        uses: neuro-inc/upload-image-action@v21.9.2
+        uses: neuro-inc/upload-image-action@v24.4.0
         with:
           image: platform-e2e
           token: ${{ github.token }}
@@ -59,7 +59,7 @@ jobs:
       - name: Checkout commit
         uses: actions/checkout@v4
       - name: Purge old artifacts
-        uses: kolpav/purge-artifacts-action@v1
+        uses: kolpav/purge-artifacts-action@v4
         with:
           token: ${{ github.token }}
           expire-in: 30mins
@@ -70,7 +70,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - name: Download image artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: image
       - name: Push image
