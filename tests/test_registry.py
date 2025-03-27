@@ -6,7 +6,7 @@ from typing import Any, AsyncIterator, Iterator
 from uuid import uuid4 as uuid
 
 import pytest
-from neuro_sdk import JobStatus, RemoteImage, ResourceNotFound
+from apolo_sdk import JobStatus, RemoteImage, ResourceNotFound
 
 from platform_e2e import Helper, shell
 

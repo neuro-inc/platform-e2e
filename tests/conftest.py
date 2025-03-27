@@ -9,10 +9,7 @@ from typing import Any, AsyncIterator, Awaitable, Callable, Iterator, Protocol
 from uuid import uuid4
 
 import pytest
-from jose import jwt
-from neuro_admin_client import AdminClient, ClusterUserRoleType
-from neuro_auth_client import AuthClient
-from neuro_sdk import (
+from apolo_sdk import (
     DEFAULT_CONFIG_PATH,
     HTTPPort,
     JobStatus,
@@ -20,6 +17,9 @@ from neuro_sdk import (
     Resources,
     get,
 )
+from jose import jwt
+from neuro_admin_client import AdminClient, ClusterUserRoleType
+from neuro_auth_client import AuthClient
 from yarl import URL
 
 from platform_e2e import Helper, ensure_config

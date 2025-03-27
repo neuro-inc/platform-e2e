@@ -13,7 +13,7 @@ from typing import Any, AsyncIterator, Callable, Iterator, List, Optional, Union
 from uuid import uuid4
 
 import aiohttp
-from neuro_sdk import (
+from apolo_sdk import (
     CONFIG_ENV_NAME,
     Client,
     Container,
