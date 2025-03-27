@@ -15,15 +15,20 @@ endif
 .venv:
 ifndef CI
 	pyenv install --skip-existing
-endif
 	python -m venv .venv
 	. .venv/bin/activate; \
-	pip install -U pip
+		pip install -U pip
+endif
 
-setup: .venv
+setup:
+ifndef CI
 	. .venv/bin/activate; \
-	pip install -e .[dev]; \
+		pip install -e .[dev]; \
+		pre-commit install
+else
+	pip install -e .[dev]
 	pre-commit install
+endif
 
 test:
 	. .venv/bin/activate; \
