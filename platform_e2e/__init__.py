@@ -95,12 +95,7 @@ class Helper:
         if resources is None:
             resources = Resources(
                 cpu=0.1,
-                gpu=None,
-                gpu_model=None,
                 memory=128 * 10**6,
-                shm=True,
-                tpu_software_version=None,
-                tpu_type=None,
             )
         if volumes is None:
             volumes = []
