@@ -7,5 +7,5 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 
-[mypy-neuro_sdk.*]
+["mypy-neuro_sdk.*"]
 ignore_missing_imports = true
