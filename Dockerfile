@@ -1,4 +1,4 @@
-FROM fedora:41
+FROM fedora:42
 
 LABEL org.opencontainers.image.source="https://github.com/neuro-inc/platform-e2e"
 
