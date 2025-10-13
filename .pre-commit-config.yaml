@@ -9,10 +9,10 @@ repos:
   hooks:
   - id: yesqa
 - repo: https://github.com/PyCQA/isort
-  rev: '6.0.1'
+  rev: '7.0.0'
   hooks:
   - id: isort
-- repo: https://github.com/psf/black
+- repo: https://github.com/psf/black-pre-commit-mirror
   rev: '25.9.0'
   hooks:
   - id: black
@@ -39,7 +39,7 @@ repos:
       docs/spelling_wordlist.txt|
       .gitignore
 - repo: https://github.com/asottile/pyupgrade
-  rev: 'v3.20.0'
+  rev: 'v3.21.0'
   hooks:
   - id: pyupgrade
     args: ['--py313-plus']
@@ -49,12 +49,12 @@ repos:
   - id: flake8
     exclude: "^docs/"
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.7
+  rev: v1.7.8
   hooks:
   - id: actionlint-docker
     args: ["-ignore", "SC2155:", "-ignore", "SC2086:", "-ignore", "SC1004:"]
 - repo: https://github.com/sirosen/check-jsonschema
-  rev: 0.34.0
+  rev: 0.34.1
   hooks:
   - id: check-github-actions
 ci:
