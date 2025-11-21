@@ -19,7 +19,7 @@ jobs:
       CLIENT_TEST_E2E_USER_TOKEN_ALT: ${{ secrets.CLIENT_TEST_E2E_USER_TOKEN_ALT }}
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Install python
         uses: actions/setup-python@v6
         with:
@@ -57,7 +57,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Purge old artifacts
         uses: kolpav/purge-artifacts-action@v4
         with:
