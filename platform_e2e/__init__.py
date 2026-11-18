@@ -128,7 +128,12 @@ class Helper:
             if (wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or (
                 wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED
             ):
-                raise AssertionError(f"Wait for {wait_state} is failed: {job.status}")
+                raise AssertionError(
+                    f"Wait for {wait_state} is failed: {job.id} {job.status}, "
+                    f"reason={job.history.reason!r}, "
+                    f"description={job.history.description!r}, "
+                    f"exit_code={job.history.exit_code}"
+                )
             if wait_state == JobStatus.PENDING and job.status in (
                 JobStatus.RUNNING,
                 JobStatus.SUCCEEDED,
