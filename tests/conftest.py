@@ -225,7 +225,9 @@ async def helper(
     project_name = f"{user_name}-default"
     try:
         await client._admin.create_project(
-            project_name, cluster_name=cluster_name, org_name=None
+            project_name,
+            cluster_name=cluster_name,
+            org_name=client.config.org_name,
         )
         await client.config.fetch()
     except Exception as ex:
@@ -234,7 +236,7 @@ async def helper(
         await client._admin.get_project(
             project_name=project_name,
             cluster_name=cluster_name,
-            org_name=None,
+            org_name=client.config.org_name,
         )
     await client.config.switch_project(project_name)
     yield Helper(client, tmp_path_factory.mktemp("helper"), config_path)
@@ -254,7 +256,9 @@ async def helper_alt(
     project_name = f"{user_name_alt}-default"
     try:
         await client._admin.create_project(
-            project_name, cluster_name=cluster_name, org_name=None
+            project_name,
+            cluster_name=cluster_name,
+            org_name=client.config.org_name,
         )
         await client.config.fetch()
     except Exception as ex:
@@ -263,7 +267,7 @@ async def helper_alt(
         await client._admin.get_project(
             project_name=project_name,
             cluster_name=cluster_name,
-            org_name=None,
+            org_name=client.config.org_name,
         )
     await client.config.switch_project(project_name)
     yield Helper(client, tmp_path_factory.mktemp("helper_alt"), config_path_alt)

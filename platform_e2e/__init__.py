@@ -38,10 +38,8 @@ class Helper:
         self._client = client
         self._tmp_path = tmp_path
         self._config_path = config_path
-        self._tmpstorage = URL.build(
-            scheme="storage",
-            host=client.cluster_name,
-            path=f"/{client.config.project_name_or_raise}/{str(uuid4())}/",
+        self._tmpstorage = client.parse.str_to_uri(
+            f"storage:{uuid4()}/", allowed_schemes=("storage",)
         )
         self._has_root_storage = False
 
@@ -128,7 +126,12 @@ class Helper:
             if (wait_state != JobStatus.FAILED and job.status == JobStatus.FAILED) or (
                 wait_state == JobStatus.FAILED and job.status == JobStatus.SUCCEEDED
             ):
-                raise AssertionError(f"Wait for {wait_state} is failed: {job.status}")
+                raise AssertionError(
+                    f"Wait for {wait_state} is failed: {job.id} {job.status}, "
+                    f"reason={job.history.reason!r}, "
+                    f"description={job.history.description!r}, "
+                    f"exit_code={job.history.exit_code}"
+                )
             if wait_state == JobStatus.PENDING and job.status in (
                 JobStatus.RUNNING,
                 JobStatus.SUCCEEDED,
