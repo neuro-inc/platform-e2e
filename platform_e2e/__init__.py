@@ -38,10 +38,8 @@ class Helper:
         self._client = client
         self._tmp_path = tmp_path
         self._config_path = config_path
-        self._tmpstorage = URL.build(
-            scheme="storage",
-            host=client.cluster_name,
-            path=f"/{client.config.project_name_or_raise}/{str(uuid4())}/",
+        self._tmpstorage = client.parse.str_to_uri(
+            f"storage:{uuid4()}/", allowed_schemes=("storage",)
         )
         self._has_root_storage = False
 

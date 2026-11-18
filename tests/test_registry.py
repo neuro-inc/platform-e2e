@@ -34,13 +34,7 @@ def _build_image(image: RemoteImage) -> Iterator[None]:
 
 @pytest.fixture(scope="session")
 async def image(helper: Helper) -> AsyncIterator[RemoteImage]:
-    image = RemoteImage(
-        name="platform-e2e",
-        tag=str(uuid()),
-        registry=helper.registry.host,
-        cluster_name=helper.cluster_name,
-        project_name=helper.project_name,
-    )
+    image = helper.client.parse.remote_image(f"image:platform-e2e:{uuid()}")
     with _build_image(image):
         yield image
         try:
