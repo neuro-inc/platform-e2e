@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from apolo_sdk import JobStatus, Resources
+from yarl import URL
 
 from platform_e2e import Helper
 
@@ -94,8 +95,8 @@ async def test_job_without_http_port_external_connectivity(
     no_http_job = await secret_job(False)
 
     # Let's emulate external and internal url
-    ingress_secret_url = str(ingress_secret_url).replace(
-        http_job["id"], no_http_job["id"]
+    ingress_secret_url = URL(
+        str(ingress_secret_url).replace(http_job["id"], no_http_job["id"])
     )
     internal_secret_url = str(internal_secret_url).replace(
         http_job["id"], no_http_job["id"]

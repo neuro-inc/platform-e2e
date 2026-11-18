@@ -3,7 +3,7 @@ FROM fedora:43
 LABEL org.opencontainers.image.source="https://github.com/neuro-inc/platform-e2e"
 
 RUN echo -e max_parallel_downloads=10\\nfastestmirror=true >> /etc/dnf/dnf.conf && \
-    dnf install -y --exclude container-selinux podman make && \
+    dnf install -y --exclude container-selinux podman make python3 && \
     rm -rf /var/cache /var/log/dnf* /var/log/yum.*
 
 RUN rm -rf  /var/lib/containers/ && \
